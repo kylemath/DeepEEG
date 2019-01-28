@@ -1,5 +1,7 @@
 ## DeepEEG ##
 
+![alt text](DeepEEGImage.png)
+
 Goal is to make deep learning stacks that processes generally EEG trials as input and predicts binary trial category as output. This is all made to run on Google Colab notebooks using cloud GPU capabilities, so the git repo's get loaded at the start of the code into the workspace. Minor mods may be needed to use local Jupyter notebook. Long term goal of command line interface and mne toolbox plugin.
 
 Strategy:
