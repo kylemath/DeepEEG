@@ -129,6 +129,9 @@ def muse_load_data(data_dir, subject_nb=1, session_nb=1, sfreq=256.,
 ##Setup TensorFlow
 #last part not working (curl)
 #def SetupTensorFlow():
+  #install ngork for tensorflow viz
+  #!wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip
+  #!unzip ngrok-stable-linux-amd64.zip
   #import os
   ##run tensorboard
   #LOG_DIR = './log'
