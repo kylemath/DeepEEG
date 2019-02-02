@@ -62,6 +62,8 @@ def preprocess(raw, event_id, event_names, plot_psd=True, filter_data=True,
     viz.plot_compare_evokeds(evoked_dict, picks=pick, colors=colors,
                                  split_legend=True)
 
+  epochs.event_names = event_names
+
   return epochs
 
 
@@ -90,6 +92,7 @@ def FeatureEngineer(epochs, model_type='NN',
   from DeepEEG.utils import factors
   
   #Training Settings
+  event_names = epochs.event_names
   num_classes = len(epochs.event_id)
   np.random.seed(random_seed)
 
@@ -102,7 +105,7 @@ def FeatureEngineer(epochs, model_type='NN',
     
     
     ## Condition0 ##
-    print('Computing Morlet Wavelets on condition zero')
+    print('Computing Morlet Wavelets on ' + event_names[0])
     tfr0 = tfr_morlet(epochs[event_names[0]], freqs=frequencies, 
                           n_cycles=wave_cycles, return_itc=False,
                           picks=electrodes_out,average=False,decim=wavelet_decim)
@@ -116,7 +119,7 @@ def FeatureEngineer(epochs, model_type='NN',
     
 
     ## Condition1 ##
-    print('Computing Morlet Wavelets on condition one')
+    print('Computing Morlet Wavelets on ' + event_names[1])
     tfr1 = tfr_morlet(epochs[event_names[1]], freqs=frequencies, 
                           n_cycles=wave_cycles, return_itc=False,
                           picks=electrodes_out,average=False,decim=wavelet_decim)
