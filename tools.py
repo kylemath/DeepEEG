@@ -1,6 +1,6 @@
 def preprocess(raw, sfreq, event_id, event_names, plot_psd=True, filter_data=True, 
                eeg_filter_highpass=1, plot_events=True, epoch_time=(-1,2), 
-               baseline=(-.2,0), rej_thresh_uV=100,
+               baseline=(-.2,0), rej_thresh_uV=200,
                epoch_decim=1, plot_electrodes=True,
                plot_erp=True):
 
