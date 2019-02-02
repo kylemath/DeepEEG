@@ -90,7 +90,7 @@ def FeatureEngineer(epochs, model_type='NN',
   from DeepEEG.utils import factors
   
   #Training Settings
-  num_classes = num_classes
+  num_classes = len(epochs.event_id)
   np.random.seed(random_seed)
 
   if frequency_domain:
