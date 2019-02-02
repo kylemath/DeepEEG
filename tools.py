@@ -1,4 +1,4 @@
-def preprocess(raw, event_id, event_names, plot_psd=True, filter_data=True, 
+def preprocess(raw, event_id, plot_psd=True, filter_data=True, 
                eeg_filter_highpass=1, plot_events=True, epoch_time=(-1,2), 
                baseline=(-.2,0), rej_thresh_uV=200,
                epoch_decim=1, plot_electrodes=True,
@@ -12,6 +12,13 @@ def preprocess(raw, event_id, event_names, plot_psd=True, filter_data=True,
   tmin=epoch_time[0] 
   tmax=epoch_time[1] 
   eeg_filter_lowpass = nsfreq/2.5  #lower to avoid aliasing from decim
+
+  #pull event names in order of trigger number
+  event_names = ['cond0','cond1']
+  i = 0
+  for key, value in sorted(epochs.event_id.iteritems(), key=lambda (k,v): (v,k)):
+    event_names[i] = key
+    i += 1
 
   #Filtering
 
