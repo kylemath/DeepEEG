@@ -92,7 +92,7 @@ def FeatureEngineer(epochs, model_type='NN',
   #Training Settings
   
   #pull event names in order of trigger number
-  event_names = []
+  event_names = ['cond0','cond1']
   i = 0
   for key, value in sorted(epochs.event_id.iteritems(), key=lambda (k,v): (v,k)):
     event_names[i] = key
