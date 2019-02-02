@@ -28,7 +28,7 @@ def preprocess(raw, event_id, event_names, plot_psd=True, filter_data=True,
 
   #Epoching
   events = find_events(raw,shortest_event=1)
-  color = {event_nums[0]: 'red', event_nums[1]: 'black'}
+  color = {1: 'red', 2: 'black'}
 
   #plot event timing
   if plot_events:
