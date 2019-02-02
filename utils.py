@@ -6,6 +6,7 @@ def factors(n):
 def load_data(filename,data_type='muse',plot_sensors=True,plot_raw=True,plot_raw_psd=True,stim_channel=False, ):  
  
     from mne import io
+
     #load .vhdr files from brain vision recorder
     raw = io.read_raw_brainvision(filename, 
                             montage='standard_1020', 
@@ -111,6 +112,7 @@ def muse_load_data(data_dir, subject_nb=1, session_nb=1, sfreq=256.,
     Returns:
         (mne.io.array.array.RawArray): loaded EEG
     """
+    import os
     if subject_nb == 'all':
         subject_nb = '*'
     if session_nb == 'all':
