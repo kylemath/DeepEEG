@@ -63,7 +63,7 @@ def load_data(filename,data_type='muse',plot_sensors=True,plot_raw=True,plot_raw
     if plot_raw_psd:
       raw.plot_psd(fmin=.1, fmax=100 ) 
   
-    return raw
+    return raw,sfreq
 
 
 #from eeg-notebooks
