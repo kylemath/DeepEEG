@@ -1,5 +1,3 @@
-import subprocess
-subprocess.Popen("pip install mne")
 from mne import pick_types, viz, io, Epochs, create_info
 from mne import channels, find_events, concatenate_raws
 from mne import read_evokeds
@@ -17,7 +15,6 @@ from numpy import genfromtxt
 from collections import OrderedDict
 
 import matplotlib.pyplot as plt
-subprocess.Popen("matplotlib inline")
 plt.rcParams["figure.figsize"] = (12,12)
 
 import keras
