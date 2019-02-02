@@ -113,6 +113,8 @@ def muse_load_data(data_dir, subject_nb=1, session_nb=1, sfreq=256.,
         (mne.io.array.array.RawArray): loaded EEG
     """
     import os
+    from glob import glob
+    
     if subject_nb == 'all':
         subject_nb = '*'
     if session_nb == 'all':
