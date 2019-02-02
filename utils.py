@@ -5,6 +5,8 @@ from mne.time_frequency import tfr_morlet
 from mne.io import RawArray
 from mne.channels import read_montage
 
+import os
+
 import pandas as pd
 pd.options.display.max_columns = None
 pd.options.display.precision = 4
