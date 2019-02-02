@@ -102,7 +102,7 @@ def FeatureEngineer(epochs, model_type='NN',
     
     
     ## Condition0 ##
-    print('Computing Morlet Wavelets on ' + event_names[0])
+    print('Computing Morlet Wavelets on condition zero')
     tfr0 = tfr_morlet(epochs[event_names[0]], freqs=frequencies, 
                           n_cycles=wave_cycles, return_itc=False,
                           picks=electrodes_out,average=False,decim=wavelet_decim)
@@ -116,7 +116,7 @@ def FeatureEngineer(epochs, model_type='NN',
     
 
     ## Condition1 ##
-    print('Computing Morlet Wavelets on ' + event_names[1])
+    print('Computing Morlet Wavelets on condition one')
     tfr1 = tfr_morlet(epochs[event_names[1]], freqs=frequencies, 
                           n_cycles=wave_cycles, return_itc=False,
                           picks=electrodes_out,average=False,decim=wavelet_decim)
