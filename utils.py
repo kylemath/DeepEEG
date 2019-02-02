@@ -1,24 +1,6 @@
 #find the factors of a number |to add extra dimension for CNN|
 def factors(n):
       return [i for i in range(1, n + 1) if not n%i]
-  
-##Setup TensorFlow
-def SetupTensorFlow():
-  
-  #run tensorboard
-  LOG_DIR = './log'
-  get_ipython().system_raw(
-      'tensorboard --logdir {} --host 0.0.0.0 --port 6007 &'
-      .format(LOG_DIR)
-  )
-
-  #run ngork
-  get_ipython().system_raw('./ngrok http 6007 &')
-
-  #get url
-  curl -s http://localhost:4040/api/tunnels | python3 -c \
-      "import sys, json; print(json.load(sys.stdin)['tunnels'][0]['public_url'])"
-
 
 #load in recorder data files
 def load_data(filename,data_type='muse',plot_sensors=True,plot_raw=True,plot_raw_psd=True,stim_channel=False, ):  
@@ -142,4 +124,24 @@ def muse_load_data(data_dir, subject_nb=1, session_nb=1, sfreq=256.,
     return load_muse_csv_as_raw(fnames, sfreq=sfreq, ch_ind=ch_ind,
                                 stim_ind=stim_ind,
                                 replace_ch_names=replace_ch_names, verbose=verbose)
+
+
+##Setup TensorFlow
+#last part not working (curl)
+#def SetupTensorFlow():
+  #import os
+  ##run tensorboard
+  #LOG_DIR = './log'
+  #get_ipython().system_raw(
+  #    'tensorboard --logdir {} --host 0.0.0.0 --port 6007 &'
+  #    .format(LOG_DIR)
+  #)
+
+  #run ngork
+  #get_ipython().system_raw('./ngrok http 6007 &')
+
+  #get url
+  #os.system(curl -s http://localhost:4040/api/tunnels | python3 -c \
+  #    "import sys, json; print(json.load(sys.stdin)['tunnels'][0]['public_url'])")
+
   
