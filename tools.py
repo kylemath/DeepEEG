@@ -63,7 +63,7 @@ def preprocess(raw, event_id, plot_psd=True, filter_data=True,
   if plot_erp:
     evoked_dict = dict()
     evoked_dict['eventZero'] = evoked_zero
-    evoked_dict['eventOPne'] = evoked_one
+    evoked_dict['eventOne'] = evoked_one
     colors = dict(eventZero="Red", eventOne="Blue")
     pick = [0,1,2,3]
     viz.plot_compare_evokeds(evoked_dict, picks=pick, colors=colors,
