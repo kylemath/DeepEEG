@@ -5,7 +5,7 @@ def factors(n):
 #load in recorder data files
 def load_data(filename,data_type='muse',plot_sensors=True,plot_raw=True,plot_raw_psd=True,stim_channel=False, ):  
  
-  
+    from mne import io
     #load .vhdr files from brain vision recorder
     raw = io.read_raw_brainvision(filename, 
                             montage='standard_1020', 
