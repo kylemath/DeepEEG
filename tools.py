@@ -1,4 +1,4 @@
-def preprocess(raw, event_id, event_names, plot_psd=True, filter_data=True, 
+def preprocess(raw, sfreq, event_id, event_names, plot_psd=True, filter_data=True, 
                eeg_filter_highpass=1, plot_events=True, epoch_time=(-1,2), 
                baseline=(-.2,0), rej_thresh_uV=100,
                epoch_decim=1, plot_electrodes=True,
@@ -9,7 +9,6 @@ def preprocess(raw, event_id, event_names, plot_psd=True, filter_data=True,
 
   print(raw.info)
 
-  sfreq = raw.info['sfreq']
   nsfreq = sfreq/epoch_decim #create new output freq for after epoch or wavelet decim
   tmin=epoch_time[0] 
   tmax=epoch_time[1] 
