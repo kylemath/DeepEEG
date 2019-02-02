@@ -1,5 +1,6 @@
-!pip install mne
-from mne import pick_types, viz, io, Epochs creat_info
+import subprocess
+subprocess.Popen("pip install mne")
+from mne import pick_types, viz, io, Epochs, create_info
 from mne import channels, find_events, concatenate_raws
 from mne import read_evokeds
 from mne.time_frequency import tfr_morlet
@@ -16,7 +17,7 @@ from numpy import genfromtxt
 from collections import OrderedDict
 
 import matplotlib.pyplot as plt
-%matplotlib inline
+subprocess.Popen("matplotlib inline")
 plt.rcParams["figure.figsize"] = (12,12)
 
 import keras
@@ -29,7 +30,6 @@ from keras.callbacks import TensorBoard
 from sklearn.model_selection import train_test_split
 from sklearn.utils import class_weight
 
-import os
 from glob import glob
 
 
