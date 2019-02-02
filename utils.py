@@ -55,6 +55,8 @@ def load_muse_csv_as_raw(filename, sfreq=256., ch_ind=[0, 1, 2, 3],
     Returns:
         (mne.io.array.array.RawArray): loaded EEG
     """
+    import pandas as pd
+
     n_channel = len(ch_ind)
 
     raw = []
@@ -114,7 +116,6 @@ def muse_load_data(data_dir, subject_nb=1, session_nb=1, sfreq=256.,
     """
     import os
     from glob import glob
-    import pandas as pd
 
     if subject_nb == 'all':
         subject_nb = '*'
