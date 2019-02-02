@@ -62,11 +62,11 @@ def preprocess(raw, event_id, plot_psd=True, filter_data=True,
   ## plot ERP in each condition on same plot
   if plot_erp:
     evoked_dict = dict()
-    evoked_dict[event_names[0]] = evoked_zero
-    evoked_dict[event_names[1]] = evoked_one
-    #colors = dict(Standard="Red", Target="Blue")
+    evoked_dict['eventZero'] = evoked_zero
+    evoked_dict['eventOPne'] = evoked_one
+    colors = dict(eventZero="Red", eventOne="Blue")
     pick = [0,1,2,3]
-    viz.plot_compare_evokeds(evoked_dict, picks=pick, #colors=colors,
+    viz.plot_compare_evokeds(evoked_dict, picks=pick, colors=colors,
                                  split_legend=True)
 
   return epochs
