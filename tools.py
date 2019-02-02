@@ -8,6 +8,7 @@ def preprocess(raw, event_id, event_names, plot_psd=True, filter_data=True,
   from mne import pick_types, viz, Epochs
 
   
+  sfreq = raw.info['sfreq']
   nsfreq = sfreq/epoch_decim #create new output freq for after epoch or wavelet decim
   tmin=epoch_time[0] 
   tmax=epoch_time[1] 
