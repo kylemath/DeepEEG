@@ -1,3 +1,40 @@
+!pip install mne
+from mne import pick_types, viz, io, Epochs creat_info
+from mne import channels, find_events, concatenate_raws
+from mne import read_evokeds
+from mne.time_frequency import tfr_morlet
+from mne.io import RawArray
+from mne.channels import read_montage
+
+import pandas as pd
+pd.options.display.max_columns = None
+pd.options.display.precision = 4
+
+import numpy as np
+from numpy import genfromtxt
+
+from collections import OrderedDict
+
+import matplotlib.pyplot as plt
+%matplotlib inline
+plt.rcParams["figure.figsize"] = (12,12)
+
+import keras
+from keras import regularizers
+from keras.models import Sequential, Model
+from keras.layers import Dense, Dropout, Activation, Input
+from keras.layers import Flatten, Conv2D, MaxPooling2D, LSTM
+from keras.callbacks import TensorBoard
+
+from sklearn.model_selection import train_test_split
+from sklearn.utils import class_weight
+
+import os
+from glob import glob
+
+
+
+
 #find the factors of a number |to add extra dimension for CNN|
 def factors(n):
       return [i for i in range(1, n + 1) if not n%i]
@@ -5,7 +42,6 @@ def factors(n):
 #load in recorder data files
 def load_data(filename,data_type='muse',plot_sensors=True,plot_raw=True,plot_raw_psd=True,stim_channel=False, ):  
  
-    from mne import io
 
     #load .vhdr files from brain vision recorder
     raw = io.read_raw_brainvision(filename, 
@@ -55,9 +91,6 @@ def load_muse_csv_as_raw(filename, sfreq=256., ch_ind=[0, 1, 2, 3],
     Returns:
         (mne.io.array.array.RawArray): loaded EEG
     """
-    import pandas as pd
-    from glob import glob
-
 
     n_channel = len(ch_ind)
 
@@ -116,8 +149,7 @@ def muse_load_data(data_dir, subject_nb=1, session_nb=1, sfreq=256.,
     Returns:
         (mne.io.array.array.RawArray): loaded EEG
     """
-    import os
-    from glob import glob
+
 
     if subject_nb == 'all':
         subject_nb = '*'
@@ -132,6 +164,9 @@ def muse_load_data(data_dir, subject_nb=1, session_nb=1, sfreq=256.,
     return load_muse_csv_as_raw(fnames, sfreq=sfreq, ch_ind=ch_ind,
                                 stim_ind=stim_ind,
                                 replace_ch_names=replace_ch_names, verbose=verbose)
+
+
+
 
 
 ##Setup TensorFlow
