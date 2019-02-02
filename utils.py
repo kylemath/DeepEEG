@@ -56,6 +56,8 @@ def load_muse_csv_as_raw(filename, sfreq=256., ch_ind=[0, 1, 2, 3],
         (mne.io.array.array.RawArray): loaded EEG
     """
     import pandas as pd
+    from glob import glob
+
 
     n_channel = len(ch_ind)
 
