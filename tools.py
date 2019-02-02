@@ -62,8 +62,6 @@ def preprocess(raw, event_id, event_names, plot_psd=True, filter_data=True,
     viz.plot_compare_evokeds(evoked_dict, picks=pick, colors=colors,
                                  split_legend=True)
 
-  epochs.event_names = event_names
-
   return epochs
 
 
@@ -92,7 +90,13 @@ def FeatureEngineer(epochs, model_type='NN',
   from DeepEEG.utils import factors
   
   #Training Settings
-  event_names = epochs.event_names
+  
+  #pull event names in order of trigger number
+  i = 0
+  for key, value in sorted(epochs.event_id.iteritems(), key=lambda (k,v): (v,k)):
+    event_names[i] = key
+    i += 1
+
   num_classes = len(epochs.event_id)
   np.random.seed(random_seed)
 
