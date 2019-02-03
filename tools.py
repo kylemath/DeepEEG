@@ -240,8 +240,8 @@ def FeatureEngineer(epochs, model_type='NN',
   
   #Print some outputs
   print('Combined X Shape: ' + str(X.shape))
-  print('Combined Y Shape: ' + str(feats.Y_class.shape))
-  print('Y Example (should be 1s & 0s): ' + str(feats.Y_class[0:10]))
+  print('Combined Y Shape: ' + str(Y_class.shape))
+  print('Y Example (should be 1s & 0s): ' + str(Y_class[0:10]))
   print('X Range: ' + str(np.min(X)) + ':' + str(np.max(X)))
   print('Input Shape: ' + str(feats.input_shape))
   print('x_train shape:', feats.x_train.shape)
