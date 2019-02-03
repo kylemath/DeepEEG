@@ -105,7 +105,6 @@ def FeatureEngineer(epochs, model_type='NN',
     event_names[i] = key
     i += 1
   
-  global Feats
   Feats = 1
   Feats.num_classes = len(epochs.event_id)
   np.random.seed(random_seed)
