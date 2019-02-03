@@ -188,11 +188,11 @@ def FeatureEngineer(epochs, model_type='NN',
   if not frequency_domain:
     print('Constructing Time Domain Features')
 
-    X = np.moveaxis(epochs._data[:,:-3,:],1,2); #put channels last, remove eye and stim
+    X = np.moveaxis(epochs._data[:,:-1,:],1,2); #put channels last, remove eye and stim
 
     #take post baseline only
     stim_onset = np.argmax(epochs.times>0)
-    new_times = epochs.times[stim_onset:]
+    feats.new_times = epochs.times[stim_onset:]
     X = X[:,stim_onset:,:]
     Y_class = epochs.events[:,2]-1  #subtract 1 to make 0 and 1
 
@@ -252,6 +252,7 @@ def FeatureEngineer(epochs, model_type='NN',
   print('Class Weights: ' + str(feats.class_weights))
 
   return feats
+
 
 
 
