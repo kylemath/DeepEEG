@@ -256,7 +256,7 @@ def FeatureEngineer(epochs, model_type='NN',
 
 
 
-def CreateModel(Feats,model_type='NN',batch_size=1):
+def CreateModel(feats,model_type='NN',batch_size=1):
   print('Creating ' +  model_type + ' Model')
   
   import keras
@@ -267,7 +267,7 @@ def CreateModel(Feats,model_type='NN',batch_size=1):
   
   ##---LSTM - Many to two, sequence of time to classes
   if model_type == 'LSTM':
-    units = [Feats.input_shape[1], 100, 100, 100, 100, Feats.num_classes]
+    units = [feats.input_shape[1], 100, 100, 100, 100, feats.num_classes]
     model = Sequential()
     model.add(LSTM(input_shape=(None, units[0]) ,units=units[1], return_sequences=True))
     model.add(Dropout(0.2))
@@ -292,25 +292,25 @@ def CreateModel(Feats,model_type='NN',batch_size=1):
     model.add(Activation('relu'))
     model.add(Dropout(.25))
     
-    model.add(Dense(Feats.num_classes, activation='softmax'))
+    model.add(Dense(feats.num_classes, activation='softmax'))
 
   ##----Convolutional Network                  
   if model_type == 'CNN':
     model = Sequential()
-    model.add(Conv2D(10, (3, 3), input_shape=Feats.input_shape, padding='same'))
+    model.add(Conv2D(10, (3, 3), input_shape=feats.input_shape, padding='same'))
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
     model.add(Flatten())
     model.add(Dense(10))
     model.add(Activation('relu'))
-    model.add(Dense(Feats.num_classes))
+    model.add(Dense(feats.num_classes))
     model.add(Activation('softmax'))
     
   if model_type == 'AUTO': 
     encoding_dim = 16
-    input_data = Input(shape=(Feats.input_shape[0],))
+    input_data = Input(shape=(feats.input_shape[0],))
     encoded = Dense(encoding_dim, activation='relu')(input_data) #,activity_regularizer=regularizers.l1(10e-5)
-    decoded = Dense(Feats.input_shape[0], activation='sigmoid')(encoded)
+    decoded = Dense(feats.input_shape[0], activation='sigmoid')(encoded)
     model = Model(input_data, decoded)
     
     
@@ -328,7 +328,7 @@ def CreateModel(Feats,model_type='NN',batch_size=1):
   
   if model_type == 'AUTODeep': 
     units = [128,64,32,16,32,64,128]
-    input_data = Input(shape=(Feats.input_shape[0],))
+    input_data = Input(shape=(feats.input_shape[0],))
     encoded = Dense(units[0], activation='relu')(input_data)
     encoded = Dense(units[1], activation='relu')(encoded)
     encoded = Dense(units[2], activation='relu')(encoded)
@@ -336,7 +336,7 @@ def CreateModel(Feats,model_type='NN',batch_size=1):
     decoded = Dense(units[4], activation='relu')(encoded) 
     decoded = Dense(units[5], activation='relu')(encoded) 
     decoded = Dense(units[6], activation='relu')(decoded)
-    decoded = Dense(Feats.input_shape[0], activation='sigmoid')(decoded)
+    decoded = Dense(feats.input_shape[0], activation='sigmoid')(decoded)
     model = Model(input_data, decoded)
         
     encoder = Model(input_data,encoded)
@@ -366,8 +366,7 @@ def CreateModel(Feats,model_type='NN',batch_size=1):
 
 
 
-def traintestval(model,batch_size=1,train_epochs=20,model_type='NN'):
-  class_weights,x_train,x_test,x_val,y_train,y_test,y_val,
+def traintestval(model,feats,batch_size=1,train_epochs=20,model_type='NN'):
   print('Training Model:')
   import matplotlib.pyplot as plt
 
@@ -375,13 +374,13 @@ def traintestval(model,batch_size=1,train_epochs=20,model_type='NN'):
   if model_type == 'AUTO' or model_type == 'AUTODeep':
     print('Training autoencoder:')
    
-    history = model.fit(Feats.x_train, Feats.x_train,
+    history = model.fit(feats.x_train, feats.x_train,
                         batch_size = batch_size,
                         epochs=train_epochs,
-                        validation_data=(Feats.x_val,Feats.x_val),
+                        validation_data=(feats.x_val,feats.x_val),
                         shuffle=True,
                         verbose=True,
-                        class_weight=Feats.class_weights
+                        class_weight=feats.class_weights
                        )
     
     # list all data in history
@@ -398,13 +397,13 @@ def traintestval(model,batch_size=1,train_epochs=20,model_type='NN'):
 
   else:
     
-    history = model.fit(Feats.x_train, Feats.y_train,
+    history = model.fit(feats.x_train, feats.y_train,
               batch_size=batch_size,
               epochs=train_epochs,
-              validation_data=(Feats.x_val, Feats.y_val),
+              validation_data=(feats.x_val, feats.y_val),
               shuffle=True,
               verbose=True,
-              class_weight=Feats.class_weights
+              class_weight=feats.class_weights
               )
 
     # list all data in history
@@ -429,7 +428,7 @@ def traintestval(model,batch_size=1,train_epochs=20,model_type='NN'):
     
     
     # Test on left out Test data
-    score, acc = model.evaluate(Feats.x_test, Feats.y_test, batch_size=batch_size)
+    score, acc = model.evaluate(feats.x_test, feats.y_test, batch_size=batch_size)
     print(model.metrics_names)
     print('Test loss:', score)
     print('Test accuracy:', acc)
