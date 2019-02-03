@@ -235,8 +235,8 @@ def FeatureEngineer(epochs, model_type='NN',
   #compute class weights for uneven classes
   feats.y_ints = [y.argmax() for y in feats.y_train]
   feats.class_weights = class_weight.compute_class_weight('balanced',
-                                                 np.unique(y_ints),
-                                                 y_ints)
+                                                 np.unique(feats.y_ints),
+                                                 feats.y_ints)
   
   #Print some outputs
   print('Combined X Shape: ' + str(X.shape))
