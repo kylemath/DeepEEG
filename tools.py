@@ -87,16 +87,16 @@ def FeatureEngineer(epochs, model_type='NN',
   
 
   class Feats:
-    def __init__(self,num_classes,class_weights,input_shape,x_train,y_train,x_test,y_test,x_val,y_val):
-      self.num_classes = 2
-      self.class_weights = [1., 1.]
-      self.input_shape = 16
-      self.x_train = 1
-      self.y_train = 1
-      self.x_test = 1
-      self.y_test = 1
-      self.x_val = 1
-      self.y_val = 1
+    def __init__(self,a=2,b=[1,1],c=[16,],d=1,e=1,f=1,g=1,h=1,i=1):
+      self.num_classes = a
+      self.class_weights = b
+      self.input_shape = c
+      self.x_train = d
+      self.y_train = e
+      self.x_test = f
+      self.y_test = g
+      self.x_val = h
+      self.y_val = i
 
 
   #Takes epochs object as input and settings, outputs training, test and val data
