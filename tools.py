@@ -105,7 +105,7 @@ def FeatureEngineer(epochs, model_type='NN',
     event_names[i] = key
     i += 1
 
-  num_classes = len(epochs.event_id)
+  Feats.num_classes = len(epochs.event_id)
   np.random.seed(random_seed)
 
   if frequency_domain:
@@ -123,7 +123,7 @@ def FeatureEngineer(epochs, model_type='NN',
                           picks=electrodes_out,average=False,decim=wavelet_decim)
     tfr0 = tfr0.apply_baseline(spect_baseline,mode='mean')
     stim_onset = np.argmax(tfr0.times>0)
-    new_times = tfr0.times[stim_onset:]
+    Feats.new_times = tfr0.times[stim_onset:]
     #reshape data
     cond0_power_out = np.moveaxis(tfr0.data[:,:,:,stim_onset:],1,3) #move electrodes last
     cond0_power_out = np.moveaxis(cond0_power_out,1,2) # move time second
@@ -205,36 +205,36 @@ def FeatureEngineer(epochs, model_type='NN',
     X = (X - np.mean(X)) / np.std(X)
     
   # convert class vectors to one hot Y and recast X
-  Y = keras.utils.to_categorical(Y_class, num_classes)
+  Y = keras.utils.to_categorical(Y_class, Feats.num_classes)
   X = X.astype('float32')
 
   # Split training test and validation data 
   val_prop = val_split / (1-test_split)
-  x_train, x_test, y_train, y_test = train_test_split(X, Y, test_size=test_split,random_state=random_seed) 
-  x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=val_prop, random_state=random_seed)
+  Feats.x_train, Feats.x_test, Feats.y_train, Feats.y_test = train_test_split(X, Y, test_size=test_split,random_state=random_seed) 
+  Feats.x_train, Feats.x_val, Feats.y_train, Feats.y_val = train_test_split(Feats.x_train, Feats.y_train, test_size=val_prop, random_state=random_seed)
 
   # Compute model input shape
-  input_shape = X.shape[1:]
+  Feats.input_shape = X.shape[1:]
   
   #compute class weights for uneven classes
-  y_ints = [y.argmax() for y in y_train]
-  class_weights = class_weight.compute_class_weight('balanced',
+  Feats.y_ints = [y.argmax() for y in Feats.y_train]
+  Feats.class_weights = class_weight.compute_class_weight('balanced',
                                                  np.unique(y_ints),
                                                  y_ints)
   
   #Print some outputs
   print('Combined X Shape: ' + str(X.shape))
-  print('Combined Y Shape: ' + str(Y_class.shape))
-  print('Y Example (should be 1s & 0s): ' + str(Y_class[0:10]))
+  print('Combined Y Shape: ' + str(Feats.Y_class.shape))
+  print('Y Example (should be 1s & 0s): ' + str(Feats.Y_class[0:10]))
   print('X Range: ' + str(np.min(X)) + ':' + str(np.max(X)))
-  print('Input Shape: ' + str(input_shape))
-  print('x_train shape:', x_train.shape)
-  print(x_train.shape[0], 'train samples')
-  print(x_test.shape[0], 'test samples')
-  print(x_val.shape[0], 'validation samples')
-  print('Class Weights: ' + str(class_weights))
+  print('Input Shape: ' + str(Feats.input_shape))
+  print('x_train shape:', Feats.x_train.shape)
+  print(Feats.x_train.shape[0], 'train samples')
+  print(Feats.x_test.shape[0], 'test samples')
+  print(Feats.x_val.shape[0], 'validation samples')
+  print('Class Weights: ' + str(Feats.class_weights))
 
-  return x_train,x_test,x_val,y_train,y_test,y_val,input_shape,num_classes,class_weights, new_times
+  return Feats
 
 
 
