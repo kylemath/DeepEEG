@@ -161,10 +161,10 @@ def FeatureEngineer(epochs, model_type='NN',
     
     
     print('Condition one trials: ' + str(len(cond1_power_out)))    
-    print(event_names[1] + ' Time Points: ' + str(len(new_times)))
+    print(event_names[1] + ' Time Points: ' + str(len(feats.new_times)))
     print(event_names[1] + ' Frequencies: ' + str(len(tfr1.freqs)))
     print('Condition zero trials: ' + str(len(cond0_power_out)))
-    print(event_names[0] + ' Time Points: ' + str(len(new_times)))
+    print(event_names[0] + ' Time Points: ' + str(len(feats.new_times)))
     print(event_names[0] + ' Frequencies: ' + str(len(tfr0.freqs)))
 
     
