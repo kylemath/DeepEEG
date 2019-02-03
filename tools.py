@@ -1,4 +1,4 @@
-def preprocess(raw, event_id, plot_psd=True, filter_data=True, 
+def PreProcess(raw, event_id, plot_psd=True, filter_data=True, 
                eeg_filter_highpass=1, plot_events=True, epoch_time=(-1,2), 
                baseline=(-.2,0), rej_thresh_uV=200,
                epoch_decim=1, plot_electrodes=True,
@@ -366,7 +366,7 @@ def CreateModel(feats,model_type='NN',batch_size=1):
 
 
 
-def traintestval(model,feats,batch_size=1,train_epochs=20,model_type='NN'):
+def TrainTestVal(model,feats,batch_size=1,train_epochs=20,model_type='NN'):
   print('Training Model:')
   import matplotlib.pyplot as plt
 
