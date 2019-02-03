@@ -4,6 +4,9 @@
  
 Keras/Tensorflow deep learning stacks that processes EEG trials or raw files from the MNE toolbox as input and predicts binary trial category as output (could scale to multiclass?). This is all made to run on Google Colab notebooks using cloud GPU capabilities, so the git repo's get loaded at the start of the code into the workspace. Minor mods may be needed to use local Jupyter notebook. Long term goal of command line interface and mne toolbox plugin.
 
+Colab Notebook Example:
+https://colab.research.google.com/github/kylemath/DeepEEG/blob/master/notebooks/DeepEEG.ipynb
+
 Strategy:
 * Load in Brain Products or Interaxon Muse files with mne as mne.raw, 
 * PreProcess(mne.raw) - normal ERP preprocessing to get trials by time by electrode mne.epochs
