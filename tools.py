@@ -257,7 +257,7 @@ def FeatureEngineer(epochs, model_type='NN',
 
 
 
-def CreateModel(feats,model_type='CNN',units=[64,32,16,32,64],dropout=.25,batch_norm=True):
+def CreateModel(feats,model_type='NN',units=[16,8,4,8,16],dropout=.25,batch_norm=True,filt_size=(3,3),pool_size=(3,3)):
   
   print('Creating ' +  model_type + ' Model')
   import numpy as np
@@ -265,18 +265,40 @@ def CreateModel(feats,model_type='CNN',units=[64,32,16,32,64],dropout=.25,batch_
   from keras.models import Sequential, Model
   from keras.layers import Dense, Dropout, Activation, Input
   from keras.layers import Flatten, Conv2D, MaxPooling2D, LSTM
+  from keras.layers import BatchNormalization
+
+  nunits = len(units)
 
   ##---LSTM - Many to two, sequence of time to classes
+  #Units must be at least two 
   if model_type == 'LSTM':
+    if nunits < 2:
+      print('Warning: Need at least two layers for LSTM')
+      
     model = Sequential()
-    model.add(LSTM(input_shape=(None, feats.input_shape[1]) ,units=128, return_sequences=True))
-    model.add(Dropout(dropout))
-    model.add(LSTM(units=128,return_sequences=True))
-    model.add(Dropout(dropout))
-    model.add(LSTM(units=128,return_sequences=True))
-    model.add(Dropout(dropout))
-    model.add(LSTM(units=128,return_sequences=False))
-    model.add(Dropout(dropout))
+    model.add(LSTM(input_shape=(None, feats.input_shape[1]) ,units=units[0], return_sequences=True))
+    if batch_norm:
+      model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    if dropout:
+      model.add(Dropout(dropout))
+    
+    if len(units) > 2: 
+      for unit in units[1:-1]:
+        model.add(LSTM(units=unit,return_sequences=True))
+        if batch_norm:
+          model.add(BatchNormalization())
+        model.add(Activation('relu'))
+        if dropout:
+          model.add(Dropout(dropout))
+        
+    model.add(LSTM(units=units[-1],return_sequences=False))
+    if batch_norm:
+      model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    if dropout:
+      model.add(Dropout(dropout))
+    
     model.add(Dense(units=feats.num_classes))    
     model.add(Activation("softmax"))
     
@@ -284,7 +306,6 @@ def CreateModel(feats,model_type='CNN',units=[64,32,16,32,64],dropout=.25,batch_
   ##---DenseFeedforward Network
   #Makes a hidden layer for each item in units  
   if model_type == 'NN':
-    from keras.layers import BatchNormalization
     model = Sequential()
     model.add(Flatten(input_shape=feats.input_shape))
       
@@ -293,18 +314,29 @@ def CreateModel(feats,model_type='CNN',units=[64,32,16,32,64],dropout=.25,batch_
       if batch_norm:
         model.add(BatchNormalization())
       model.add(Activation('relu'))
-      model.add(Dropout(dropout))
+      if dropout:
+        model.add(Dropout(dropout))
     
     model.add(Dense(feats.num_classes, activation='softmax'))
 
   ##----Convolutional Network                  
   if model_type == 'CNN':
+    if nunits < 2:
+      print('Warning: Need at least two layers for CNN')
     model = Sequential()
-    model.add(Conv2D(10, (3, 3), input_shape=feats.input_shape, padding='same'))
-    model.add(Activation('relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
+    model.add(Conv2D(units[0], filt_size, input_shape=feats.input_shape, padding='same'))
+    model.add(Activation('relu'))     
+    model.add(MaxPooling2D(pool_size=pool_size, padding='same'))
+    
+    if nunits > 2:
+      for unit in units[1:-1]:
+        model.add(Conv2D(unit, filt_size, padding='same'))
+        model.add(Activation('relu'))     
+        model.add(MaxPooling2D(pool_size=pool_size, padding='same'))
+    
+    
     model.add(Flatten())
-    model.add(Dense(10))
+    model.add(Dense(units[-1]))
     model.add(Activation('relu'))
     model.add(Dense(feats.num_classes))
     model.add(Activation('softmax'))
@@ -332,7 +364,6 @@ def CreateModel(feats,model_type='CNN',units=[64,32,16,32,64],dropout=.25,batch_
   #takes an odd number of layers > 1
   #e.g. units = [64,32,16,32,64]
   if model_type == 'AUTODeep': 
-    nunits = len(units)
     if nunits % 2 == 0:
       print('Warning: Please enter odd number of layers into units')
       
@@ -383,14 +414,14 @@ def CreateModel(feats,model_type='CNN',units=[64,32,16,32,64],dropout=.25,batch_
   
   model.summary()
   
-  return model, encoder
+  return model, encoder, model_type
 
 
 
 
 
 
-def TrainTestVal(model,feats,batch_size=1,train_epochs=20,model_type='NN'):
+def TrainTestVal(model,feats,batch_size=1,train_epochs=20,model_type=model_type):
   print('Training Model:')
   import matplotlib.pyplot as plt
 
