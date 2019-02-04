@@ -26,6 +26,7 @@ API:
 LearningModels:
 * First try basic Neural Network (NN)
 * Then try Convolution Neural Net (CNN)
+* New is a 3D convolutional NN (CNN3D) in the frequency domain
 * Then try Long-Short Term Memory Recurrant Neural Net (LSTM)
 * Can also try using (AUTO) or (AUTODeep) to clean eeg data, or create features for other models
 
