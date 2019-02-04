@@ -1,5 +1,9 @@
 ## DeepEEG ##
 
+MNE framework for classification of EEG data
+[Kyle Mathewson](github.com/kylemath)
+[Kory Mathewson](github.com/korymath)
+
 ![DeepEEG Image](DeepEEGImage2.png)
  
 Keras/Tensorflow deep learning stacks that processes EEG trials or raw files from the MNE toolbox as input and predicts binary trial category as output (could scale to multiclass?). This is all made to run on Google Colab notebooks using cloud GPU capabilities, so the git repo's get loaded at the start of the code into the workspace. Minor mods may be needed to use local Jupyter notebook. Long term goal of command line interface and mne toolbox plugin.
