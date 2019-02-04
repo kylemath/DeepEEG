@@ -1,11 +1,27 @@
+from mne import find_events
+from mne import pick_types, viz, Epochs
+import numpy as np
+import keras
+from sklearn.model_selection import train_test_split
+from sklearn.utils import class_weight
+from mne.time_frequency import tfr_morlet
+from DeepEEG.utils import factors
+from keras.models import Sequential, Model
+from keras.layers import Dense, Dropout, Activation, Input
+from keras.layers import Flatten, Conv2D, MaxPooling2D, LSTM
+from keras.layers import BatchNormalization 
+import matplotlib.pyplot as plt
+
+model_type = 'NN'
+
+
 def PreProcess(raw, event_id, plot_psd=True, filter_data=True, 
                eeg_filter_highpass=1, plot_events=True, epoch_time=(-1,2), 
                baseline=(-.2,0), rej_thresh_uV=200,
                epoch_decim=1, plot_electrodes=True,
                plot_erp=True):
 
-  from mne import find_events
-  from mne import pick_types, viz, Epochs
+
 
   sfreq = raw.info['sfreq']
   nsfreq = sfreq/epoch_decim #create new output freq for after epoch or wavelet decim
@@ -104,13 +120,7 @@ def FeatureEngineer(epochs, model_type='NN',
   #option to use frequency or time domain
   #take epochs? tfr? or autoencoder encoded object?
   
-  import numpy as np
-  import keras
-  from sklearn.model_selection import train_test_split
-  from sklearn.utils import class_weight
-  from mne.time_frequency import tfr_morlet
-  from DeepEEG.utils import factors
-  
+
   #Training Settings
   
   #pull event names in order of trigger number
@@ -260,12 +270,7 @@ def FeatureEngineer(epochs, model_type='NN',
 def CreateModel(feats,model_type='NN',units=[16,8,4,8,16],dropout=.25,batch_norm=True,filt_size=(3,3),pool_size=(3,3)):
   
   print('Creating ' +  model_type + ' Model')
-  import numpy as np
-  import keras
-  from keras.models import Sequential, Model
-  from keras.layers import Dense, Dropout, Activation, Input
-  from keras.layers import Flatten, Conv2D, MaxPooling2D, LSTM
-  from keras.layers import BatchNormalization
+
 
   nunits = len(units)
 
@@ -423,7 +428,6 @@ def CreateModel(feats,model_type='NN',units=[16,8,4,8,16],dropout=.25,batch_norm
 
 def TrainTestVal(model,feats,batch_size=1,train_epochs=20,model_type=model_type):
   print('Training Model:')
-  import matplotlib.pyplot as plt
 
   #Train Model
   if model_type == 'AUTO' or model_type == 'AUTODeep':
