@@ -4,6 +4,7 @@ from mne import read_evokeds
 from mne.time_frequency import tfr_morlet
 from mne.io import RawArray
 from mne.channels import read_montage
+from mne.time_frequency import tfr_morlet
 
 import os
 
@@ -24,6 +25,7 @@ from keras import regularizers
 from keras.models import Sequential, Model
 from keras.layers import Dense, Dropout, Activation, Input
 from keras.layers import Flatten, Conv2D, MaxPooling2D, LSTM
+from keras.layers import BatchNormalization, Conv3D, MaxPooling3D
 from keras.callbacks import TensorBoard
 
 from sklearn.model_selection import train_test_split
@@ -31,12 +33,19 @@ from sklearn.utils import class_weight
 
 from glob import glob
 
-
-
-
-#find the factors of a number |to add extra dimension for CNN|
-def factors(n):
-      return [i for i in range(1, n + 1) if not n%i]
+class Feats:
+  def __init__(self,a=2,b=[1,1],c=[16,],d=1,e='1',f=1,g=1,h=1,i=1,j=1,k=1):
+    self.num_classes = a
+    self.class_weights = b
+    self.input_shape = c
+    self.new_times = d
+    self.model_type = e
+    self.x_train = f
+    self.y_train = g
+    self.x_test = h
+    self.y_test = i
+    self.x_val = j
+    self.y_val = k
 
 #load in recorder data files
 def load_data(filename,data_type='muse',plot_sensors=True,plot_raw=True,plot_raw_psd=True,stim_channel=False, ):  

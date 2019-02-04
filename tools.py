@@ -1,20 +1,4 @@
-from mne import find_events
-from mne import pick_types, viz, Epochs
-import numpy as np
-import keras
-from sklearn.model_selection import train_test_split
-from sklearn.utils import class_weight
-from mne.time_frequency import tfr_morlet
-from DeepEEG.utils import factors
-from keras.models import Sequential, Model
-from keras.layers import Dense, Dropout, Activation, Input
-from keras.layers import Flatten, Conv2D, MaxPooling2D, LSTM
-from keras.layers import BatchNormalization 
-from keras.layers import Conv3D, MaxPooling3D
-import matplotlib.pyplot as plt
-
 model_type = 'NN'
-
 
 def PreProcess(raw, event_id, plot_psd=True, filter_data=True, 
                eeg_filter_highpass=1, plot_events=True, epoch_time=(-1,2), 
@@ -89,9 +73,7 @@ def PreProcess(raw, event_id, plot_psd=True, filter_data=True,
   return epochs
 
 
-
-
-
+   
 def FeatureEngineer(epochs, model_type='NN',
                     frequency_domain=0,
                     normalization=True, electrode_median=False,
@@ -103,28 +85,13 @@ def FeatureEngineer(epochs, model_type='NN',
                     random_seed=1017):
   
 
-  class Feats:
-    def __init__(self,a=2,b=[1,1],c=[16,],d=1,e=1,f=1,g=1,h=1,i=1,j=1):
-      self.num_classes = a
-      self.class_weights = b
-      self.input_shape = c
-      self.new_times = d
-      self.x_train = e
-      self.y_train = f
-      self.x_test = g
-      self.y_test = h
-      self.x_val = i
-      self.y_val = j
-
-
+    
   #Takes epochs object as input and settings, outputs training, test and val data
   #option to use frequency or time domain
   #take epochs? tfr? or autoencoder encoded object?
-  
-
-  #Training Settings
-  
+    
   #pull event names in order of trigger number
+  epochs.event_id = {'cond0':1, 'cond1':2}
   event_names = ['cond0','cond1']
   i = 0
   for key, value in sorted(epochs.event_id.iteritems(), key=lambda (k,v): (v,k)):
@@ -133,6 +100,7 @@ def FeatureEngineer(epochs, model_type='NN',
   
   feats = Feats()
   feats.num_classes = len(epochs.event_id)
+  feats.model_type = model_type
   np.random.seed(random_seed)
 
   if frequency_domain:
@@ -198,28 +166,43 @@ def FeatureEngineer(epochs, model_type='NN',
     Y_class = np.append(np.zeros(len(cond0_power_out)), np.ones(len(cond1_power_out)),0)
 
 
+    
+    ####
+    ####
+    ####
+    
   if not frequency_domain:
     print('Constructing Time Domain Features')
 
-    #check the -1 here
-    X = np.moveaxis(epochs._data[:,:-1,:],1,2); #put channels last, remove eye and stim
-
+    #if using muse aux port as eeg must label it as such
+    eeg_chans = pick_types(epochs.info,eeg=True,eog=False)
+    X = np.moveaxis(epochs._data[:,eeg_chans,:],1,2); #put channels last, remove eye and stim
+    
     #take post baseline only
     stim_onset = np.argmax(epochs.times>0)
     feats.new_times = epochs.times[stim_onset:]
     X = X[:,stim_onset:,:]
+    
+    #convert markers to class 
+    #requires markers to be 1 and 2 in data file? 
+    #This probably is not robust to other marker numbers
     Y_class = epochs.events[:,2]-1  #subtract 1 to make 0 and 1
 
-    # reshape for CNN, factor middle dimensions
-    if model_type == 'CNN':
-      all_factors = factors(X.shape[1])
-      X = np.reshape(X, (X.shape[0], int(X.shape[1]/all_factors[2]), all_factors[2], X.shape[2]),order='F')
-      
     if electrode_median:
       print('Computing Median over electrodes')
       X = np.expand_dims(np.median(X,axis=len(X.shape)-1),2)
         
+    # reshape for CNN
+    if model_type == 'CNN':
+      print('Size X before reshape for CNN: ' + str(X.shape))
+      X = np.expand_dims(X,3 )
+      print('Size X before reshape for CNN: ' + str(X.shape))
       
+    # reshape for CNN
+    if model_type == 'CNN3D':
+      print('Size X before reshape for CNN3D: ' + str(X.shape))
+      X = np.expand_dims(np.expand_dims(X,3),4)
+      print('Size X before reshape for CNN3D: ' + str(X.shape))
       
     #reshape for autoencoder    
     if model_type == 'AUTO' or model_type == 'AUTODeep':
@@ -272,16 +255,16 @@ def FeatureEngineer(epochs, model_type='NN',
 
 
 
-def CreateModel(feats,model_type='NN',units=[16,8,4,8,16],dropout=.25,batch_norm=True,filt_size=3,pool_size=2):
+def CreateModel(feats,units=[16,8,4,8,16],dropout=.25,batch_norm=True,filt_size=3,pool_size=2):
   
-  print('Creating ' +  model_type + ' Model')
+  print('Creating ' +  feats.model_type + ' Model')
 
 
   nunits = len(units)
 
   ##---LSTM - Many to two, sequence of time to classes
   #Units must be at least two 
-  if model_type == 'LSTM':
+  if feats.model_type == 'LSTM':
     if nunits < 2:
       print('Warning: Need at least two layers for LSTM')
       
@@ -315,7 +298,7 @@ def CreateModel(feats,model_type='NN',units=[16,8,4,8,16],dropout=.25,batch_norm
     
   ##---DenseFeedforward Network
   #Makes a hidden layer for each item in units  
-  if model_type == 'NN':
+  if feats.model_type == 'NN':
     model = Sequential()
     model.add(Flatten(input_shape=feats.input_shape))
       
@@ -330,7 +313,7 @@ def CreateModel(feats,model_type='NN',units=[16,8,4,8,16],dropout=.25,batch_norm
     model.add(Dense(feats.num_classes, activation='softmax'))
 
   ##----Convolutional Network                  
-  if model_type == 'CNN':
+  if feats.model_type == 'CNN':
     if nunits < 2:
       print('Warning: Need at least two layers for CNN')
     model = Sequential()
@@ -352,7 +335,7 @@ def CreateModel(feats,model_type='NN',units=[16,8,4,8,16],dropout=.25,batch_norm
     model.add(Activation('softmax'))
   
   ##----Convolutional Network                  
-  if model_type == 'CNN3D':
+  if feats.model_type == 'CNN3D':
     if nunits < 2:
       print('Warning: Need at least two layers for CNN')
     model = Sequential()
@@ -376,7 +359,7 @@ def CreateModel(feats,model_type='NN',units=[16,8,4,8,16],dropout=.25,batch_norm
     
   ## Autoencoder  
   #takes the first item in units for hidden layer size  
-  if model_type == 'AUTO': 
+  if feats.model_type == 'AUTO': 
     encoding_dim = units[0]
     input_data = Input(shape=(feats.input_shape[0],))
     encoded = Dense(encoding_dim, activation='relu')(input_data) #,activity_regularizer=regularizers.l1(10e-5)
@@ -391,7 +374,7 @@ def CreateModel(feats,model_type='NN',units=[16,8,4,8,16],dropout=.25,batch_norm
  
   #takes an odd number of layers > 1
   #e.g. units = [64,32,16,32,64]
-  if model_type == 'AUTODeep': 
+  if feats.model_type == 'AUTODeep': 
     if nunits % 2 == 0:
       print('Warning: Please enter odd number of layers into units')
       
@@ -426,14 +409,14 @@ def CreateModel(feats,model_type='NN',units=[16,8,4,8,16],dropout=.25,batch_norm
  
   
   
-  if model_type == 'AUTO' or model_type == 'AUTODeep':
+  if feats.model_type == 'AUTO' or feats.model_type == 'AUTODeep':
     opt = keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, 
                                 epsilon=None, decay=0.0, amsgrad=False)
     model.compile(optimizer=opt, loss='mean_squared_error')
   
   
   
-  if model_type == 'CNN' or model_type == 'CNN3D' or model_type == 'LSTM' or model_type == 'NN':
+  if feats.model_type == 'CNN' or feats.model_type == 'CNN3D' or feats.model_type == 'LSTM' or feats.model_type == 'NN':
     # initiate adam optimizer
     opt = keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, 
                                 epsilon=None, decay=0.0, amsgrad=False)
@@ -446,18 +429,18 @@ def CreateModel(feats,model_type='NN',units=[16,8,4,8,16],dropout=.25,batch_norm
   
   model.summary()
   
-  return model, encoder, model_type
+  return model, encoder
 
 
 
 
 
 
-def TrainTestVal(model,feats,batch_size=1,train_epochs=20,model_type=model_type):
+def TrainTestVal(model,feats,batch_size=1,train_epochs=20):
   print('Training Model:')
 
   #Train Model
-  if model_type == 'AUTO' or model_type == 'AUTODeep':
+  if feats.model_type == 'AUTO' or feats.model_type == 'AUTODeep':
     print('Training autoencoder:')
    
     history = model.fit(feats.x_train, feats.x_train,
