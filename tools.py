@@ -120,7 +120,6 @@ def FeatureEngineer(epochs, model_type='NN',
     event_names[i] = key
     i += 1
   
-  test = len(epochs.event_id)
   feats = Feats()
   feats.num_classes = len(epochs.event_id)
   np.random.seed(random_seed)
@@ -258,7 +257,8 @@ def FeatureEngineer(epochs, model_type='NN',
 
 
 
-def CreateModel(feats,model_type='NN',batch_size=1):
+def CreateModel(feats,model_type='CNN',batch_size=4, units=[64,32,64],dropout=.25,batch_norm=True):
+  
   print('Creating ' +  model_type + ' Model')
   
   import keras
@@ -266,33 +266,34 @@ def CreateModel(feats,model_type='NN',batch_size=1):
   from keras.layers import Dense, Dropout, Activation, Input
   from keras.layers import Flatten, Conv2D, MaxPooling2D, LSTM
 
-  
   ##---LSTM - Many to two, sequence of time to classes
   if model_type == 'LSTM':
-    units = [feats.input_shape[1], 100, 100, 100, 100, feats.num_classes]
     model = Sequential()
-    model.add(LSTM(input_shape=(None, units[0]) ,units=units[1], return_sequences=True))
-    model.add(Dropout(0.2))
-    model.add(LSTM(units=units[2],return_sequences=True))
-    model.add(Dropout(0.2))
-    model.add(LSTM(units=units[3],return_sequences=True))
-    model.add(Dropout(0.2))
-    model.add(LSTM(units=units[4],return_sequences=False))
-    model.add(Dropout(0.2))
-    model.add(Dense(units=units[5]))    
+    model.add(LSTM(input_shape=(None, feats.input_shape[1]) ,units=128, return_sequences=True))
+    model.add(Dropout(dropout))
+    model.add(LSTM(units=128,return_sequences=True))
+    model.add(Dropout(dropout))
+    model.add(LSTM(units=128,return_sequences=True))
+    model.add(Dropout(dropout))
+    model.add(LSTM(units=128,return_sequences=False))
+    model.add(Dropout(dropout))
+    model.add(Dense(units=feats.num_classes))    
     model.add(Activation("softmax"))
     
     
   ##---DenseFeedforward Network
+  #Makes a hidden layer for each item in units  
   if model_type == 'NN':
     from keras.layers import BatchNormalization
     model = Sequential()
-    model.add(Flatten())
-    
-    model.add(Dense(128))
-    model.add(BatchNormalization())
-    model.add(Activation('relu'))
-    model.add(Dropout(.25))
+    model.add(Flatten(input_shape=feats.input_shape))
+      
+    for unit in units:
+      model.add(Dense(unit))
+      if batch_norm:
+        model.add(BatchNormalization())
+      model.add(Activation('relu'))
+      model.add(Dropout(dropout))
     
     model.add(Dense(feats.num_classes, activation='softmax'))
 
@@ -308,13 +309,14 @@ def CreateModel(feats,model_type='NN',batch_size=1):
     model.add(Dense(feats.num_classes))
     model.add(Activation('softmax'))
     
+  ## Autoencoder  
+  #takes the first item in units for hidden layer size  
   if model_type == 'AUTO': 
-    encoding_dim = 16
+    encoding_dim = units[0]
     input_data = Input(shape=(feats.input_shape[0],))
     encoded = Dense(encoding_dim, activation='relu')(input_data) #,activity_regularizer=regularizers.l1(10e-5)
     decoded = Dense(feats.input_shape[0], activation='sigmoid')(encoded)
     model = Model(input_data, decoded)
-    
     
     encoder = Model(input_data,encoded)
     encoded_input = Input(shape=(encoding_dim,))
@@ -327,22 +329,39 @@ def CreateModel(feats,model_type='NN',batch_size=1):
     model.compile(optimizer=opt, loss='mean_squared_error')
     
  
-  
+  #takes an odd number of layers > 1
+  #e.g. units = [64,32,16,32,64]
   if model_type == 'AUTODeep': 
-    units = [128,64,32,16,32,64,128]
+    nunits = len(units)
+    if nunits % 2 == 0:
+      print('Warning: Please enter odd number of layers into units')
+      
+    half = nunits/2
+    midi = int(np.floor(half))
+    
     input_data = Input(shape=(feats.input_shape[0],))
     encoded = Dense(units[0], activation='relu')(input_data)
-    encoded = Dense(units[1], activation='relu')(encoded)
-    encoded = Dense(units[2], activation='relu')(encoded)
-    encoded = Dense(units[3], activation='relu')(encoded)
-    decoded = Dense(units[4], activation='relu')(encoded) 
-    decoded = Dense(units[5], activation='relu')(encoded) 
-    decoded = Dense(units[6], activation='relu')(decoded)
+    
+    #encoder decreases
+    if nunits >= 3:
+        for unit in units[1:midi]:
+          encoded = Dense(unit, activation='relu')(encoded)
+ 
+    #latent space
+    decoded = Dense(units[midi], activation='relu')(encoded) 
+  
+    #decoder increses
+    if nunits >= 3:
+      for unit in units[midi+1:-1]:
+        decoded = Dense(unit, activation='relu')(decoded) 
+     
+    decoded = Dense(units[-1], activation='relu')(decoded) 
+
     decoded = Dense(feats.input_shape[0], activation='sigmoid')(decoded)
     model = Model(input_data, decoded)
         
     encoder = Model(input_data,encoded)
-    encoded_input = Input(shape=(units[2],))
+    encoded_input = Input(shape=(units[midi],))
     
     opt = keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, 
                                 epsilon=None, decay=0.0, amsgrad=False)
@@ -360,7 +379,10 @@ def CreateModel(feats,model_type='NN',batch_size=1):
                   optimizer=opt,
                   metrics=['accuracy']) 
     encoder = []
-    
+  
+  
+  model.summary()
+  
   return model, encoder
 
 
@@ -435,6 +457,5 @@ def TrainTestVal(model,feats,batch_size=1,train_epochs=20,model_type='NN'):
     print('Test loss:', score)
     print('Test accuracy:', acc)
 
-  #Summarize
-  model.summary()
+
 
