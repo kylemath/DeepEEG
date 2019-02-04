@@ -1,8 +1,10 @@
 ## DeepEEG ##
 
 MNE framework for classification of EEG data
-[Kyle Mathewson](github.com/kylemath)
-[Kory Mathewson](github.com/korymath)
+
+[Kyle E. Mathewson](github.com/kylemath)
+
+[Kory W. Mathewson](github.com/korymath)
 
 ![DeepEEG Image](DeepEEGImage2.png)
  
