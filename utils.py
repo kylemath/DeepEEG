@@ -437,6 +437,7 @@ def FeatureEngineer(epochs, model_type='NN',
 def CreateModel(feats,units=[16,8,4,8,16],dropout=.25,batch_norm=True,filt_size=3,pool_size=2):
   
   print('Creating ' +  feats.model_type + ' Model')
+  print('Input shape: ' + str(feats.input_shape))
 
 
   nunits = len(units)
