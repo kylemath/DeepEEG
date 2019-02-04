@@ -12,7 +12,6 @@ from keras.layers import Flatten, Conv2D, MaxPooling2D, LSTM
 from keras.layers import BatchNormalization 
 from keras.layers import Conv3D, MaxPooling3D
 import matplotlib.pyplot as plt
-%matplotlib inline
 
 model_type = 'NN'
 
