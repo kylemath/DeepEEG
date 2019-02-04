@@ -10,7 +10,9 @@ from keras.models import Sequential, Model
 from keras.layers import Dense, Dropout, Activation, Input
 from keras.layers import Flatten, Conv2D, MaxPooling2D, LSTM
 from keras.layers import BatchNormalization 
+from keras.layers import Conv3D, MaxPooling3D
 import matplotlib.pyplot as plt
+%matplotlib inline
 
 model_type = 'NN'
 
@@ -182,8 +184,11 @@ def FeatureEngineer(epochs, model_type='NN',
     X = np.append(cond0_power_out,cond1_power_out,0);
 
     #reshape to trials x times x variables for LSTM and NN model
-    if model_type != 'CNN':
+    if model_type == 'NN' or model_type == 'LSTM':
       X = np.reshape(X, (X.shape[0], X.shape[1], X.shape[2] * X.shape[3]),order='F')
+    
+    if model_type == 'CNN3D':
+      X = np.expand_dims(X,4)
     
     if model_type == 'AUTO':
       print('Auto model reshape')
@@ -197,6 +202,7 @@ def FeatureEngineer(epochs, model_type='NN',
   if not frequency_domain:
     print('Constructing Time Domain Features')
 
+    #check the -1 here
     X = np.moveaxis(epochs._data[:,:-1,:],1,2); #put channels last, remove eye and stim
 
     #take post baseline only
@@ -206,7 +212,7 @@ def FeatureEngineer(epochs, model_type='NN',
     Y_class = epochs.events[:,2]-1  #subtract 1 to make 0 and 1
 
     # reshape for CNN, factor middle dimensions
-    if model_type == 'CNN' and not frequency_domain:
+    if model_type == 'CNN':
       all_factors = factors(X.shape[1])
       X = np.reshape(X, (X.shape[0], int(X.shape[1]/all_factors[2]), all_factors[2], X.shape[2]),order='F')
       
@@ -267,7 +273,7 @@ def FeatureEngineer(epochs, model_type='NN',
 
 
 
-def CreateModel(feats,model_type='NN',units=[16,8,4,8,16],dropout=.25,batch_norm=True,filt_size=(3,3),pool_size=(3,3)):
+def CreateModel(feats,model_type='NN',units=[16,8,4,8,16],dropout=.25,batch_norm=True,filt_size=3,pool_size=2):
   
   print('Creating ' +  model_type + ' Model')
 
@@ -345,6 +351,29 @@ def CreateModel(feats,model_type='NN',units=[16,8,4,8,16],dropout=.25,batch_norm
     model.add(Activation('relu'))
     model.add(Dense(feats.num_classes))
     model.add(Activation('softmax'))
+  
+  ##----Convolutional Network                  
+  if model_type == 'CNN3D':
+    if nunits < 2:
+      print('Warning: Need at least two layers for CNN')
+    model = Sequential()
+    model.add(Conv3D(units[0], filt_size, input_shape=feats.input_shape, padding='same'))
+    model.add(Activation('relu'))     
+    model.add(MaxPooling3D(pool_size=pool_size, padding='same'))
+    
+    if nunits > 2:
+      for unit in units[1:-1]:
+        model.add(Conv3D(unit, filt_size, padding='same'))
+        model.add(Activation('relu'))     
+        model.add(MaxPooling3D(pool_size=pool_size, padding='same'))
+    
+    
+    model.add(Flatten())
+    model.add(Dense(units[-1]))
+    model.add(Activation('relu'))
+    model.add(Dense(feats.num_classes))
+    model.add(Activation('softmax'))
+    
     
   ## Autoencoder  
   #takes the first item in units for hidden layer size  
@@ -359,12 +388,7 @@ def CreateModel(feats,model_type='NN',units=[16,8,4,8,16],dropout=.25,batch_norm
     encoded_input = Input(shape=(encoding_dim,))
     decoder_layer = model.layers[-1]
     decoder = Model(encoded_input, decoder_layer(encoded_input))
-    
-    
-    opt = keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, 
-                                epsilon=None, decay=0.0, amsgrad=False)
-    model.compile(optimizer=opt, loss='mean_squared_error')
-    
+
  
   #takes an odd number of layers > 1
   #e.g. units = [64,32,16,32,64]
@@ -399,14 +423,18 @@ def CreateModel(feats,model_type='NN',units=[16,8,4,8,16],dropout=.25,batch_norm
     encoder = Model(input_data,encoded)
     encoded_input = Input(shape=(units[midi],))
     
-    opt = keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, 
-                                epsilon=None, decay=0.0, amsgrad=False)
-    model.compile(optimizer=opt, loss='mean_squared_error')
+
  
   
   
+  if model_type == 'AUTO' or model_type == 'AUTODeep':
+    opt = keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, 
+                                epsilon=None, decay=0.0, amsgrad=False)
+    model.compile(optimizer=opt, loss='mean_squared_error')
   
-  if model_type == 'CNN' or model_type == 'LSTM' or model_type == 'NN':
+  
+  
+  if model_type == 'CNN' or model_type == 'CNN3D' or model_type == 'LSTM' or model_type == 'NN':
     # initiate adam optimizer
     opt = keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, 
                                 epsilon=None, decay=0.0, amsgrad=False)
