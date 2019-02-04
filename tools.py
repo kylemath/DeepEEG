@@ -257,10 +257,10 @@ def FeatureEngineer(epochs, model_type='NN',
 
 
 
-def CreateModel(feats,model_type='CNN',batch_size=4, units=[64,32,64],dropout=.25,batch_norm=True):
+def CreateModel(feats,model_type='CNN',units=[64,32,16,32,64],dropout=.25,batch_norm=True):
   
   print('Creating ' +  model_type + ' Model')
-  
+  import numpy as np
   import keras
   from keras.models import Sequential, Model
   from keras.layers import Dense, Dropout, Activation, Input
