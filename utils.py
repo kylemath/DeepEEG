@@ -256,19 +256,21 @@ def PreProcess(raw, event_id, plot_psd=True, filter_data=True,
 def FeatureEngineer(epochs, model_type='NN',
                     frequency_domain=0,
                     normalization=True, electrode_median=False,
-                    wavelet_decim=1,flims=(3,30),
+                    wavelet_decim=0,flims=(3,30),
                     f_bins=20,wave_cycles=6,
                     spect_baseline=[-1,-.5],
                     electrodes_out=[11,12,13,14,15],
                     test_split = 0.2, val_split = 0.2,
-                    random_seed=1017):
+                    random_seed=1017, watermark = False):
   
 
     
   #Takes epochs object as input and settings, outputs training, test and val data
   #option to use frequency or time domain
   #take epochs? tfr? or autoencoder encoded object?
-    
+  
+  np.random.seed(random_seed)
+  
   #pull event names in order of trigger number
   epochs.event_id = {'cond0':1, 'cond1':2}
   event_names = ['cond0','cond1']
@@ -277,33 +279,33 @@ def FeatureEngineer(epochs, model_type='NN',
     event_names[i] = key
     i += 1
   
+  #Create feats object for output
   feats = Feats()
   feats.num_classes = len(epochs.event_id)
   feats.model_type = model_type
-  np.random.seed(random_seed)
-
+  
   if frequency_domain:
     print('Constructing Frequency Domain Features')
     f_low = flims[0]
     f_high = flims[1]
     frequencies =  np.linspace(f_low, f_high, f_bins, endpoint=True)
-
     
-    
+    ####
     ## Condition0 ##
     print('Computing Morlet Wavelets on ' + event_names[0])
     tfr0 = tfr_morlet(epochs[event_names[0]], freqs=frequencies, 
                           n_cycles=wave_cycles, return_itc=False,
                           picks=electrodes_out,average=False,decim=wavelet_decim)
     tfr0 = tfr0.apply_baseline(spect_baseline,mode='mean')
+    #reshape data
     stim_onset = np.argmax(tfr0.times>0)
     feats.new_times = tfr0.times[stim_onset:]
-    #reshape data
+    
     cond0_power_out = np.moveaxis(tfr0.data[:,:,:,stim_onset:],1,3) #move electrodes last
     cond0_power_out = np.moveaxis(cond0_power_out,1,2) # move time second
-    #cond0_power_out[:,0:5,0:5,:] = 0 #for testing model add mark to image
+    ####
     
-
+    ####
     ## Condition1 ##
     print('Computing Morlet Wavelets on ' + event_names[1])
     tfr1 = tfr_morlet(epochs[event_names[1]], freqs=frequencies, 
@@ -313,10 +315,7 @@ def FeatureEngineer(epochs, model_type='NN',
     #reshape data
     cond1_power_out = np.moveaxis(tfr1.data[:,:,:,stim_onset:],1,3)
     cond1_power_out = np.moveaxis(cond1_power_out,1,2) # move time second
-    #cond1_power_out[:,0:5,0:5,:] = 1 #for testing model add mark to image
-
-    
-    
+    ####
     
     print('Condition one trials: ' + str(len(cond1_power_out)))    
     print(event_names[1] + ' Time Points: ' + str(len(feats.new_times)))
@@ -328,27 +327,20 @@ def FeatureEngineer(epochs, model_type='NN',
     
     #Construct X
     X = np.append(cond0_power_out,cond1_power_out,0);
+   #Append Data
+    Y_class = np.append(np.zeros(len(cond0_power_out)), np.ones(len(cond1_power_out)),0)
 
     #reshape to trials x times x variables for LSTM and NN model
     if model_type == 'NN' or model_type == 'LSTM':
-      X = np.reshape(X, (X.shape[0], X.shape[1], X.shape[2] * X.shape[3]),order='F')
+      X = np.reshape(X, (X.shape[0], X.shape[1], np.prod(X.shape[2:])))
     
     if model_type == 'CNN3D':
       X = np.expand_dims(X,4)
     
-    if model_type == 'AUTO':
+    if model_type == 'AUTO' or model_type == 'AUTODeep':
       print('Auto model reshape')
-      X = np.reshape(X, (X.shape[0],X.shape[1]*X.shape[2]*X.shape[3]))
-      
+      X = np.reshape(X, (X.shape[0],np.prod(X.shape[1:])))
 
-    #Append Data
-    Y_class = np.append(np.zeros(len(cond0_power_out)), np.ones(len(cond1_power_out)),0)
-
-
-    
-    ####
-    ####
-    ####
     
   if not frequency_domain:
     print('Constructing Time Domain Features')
@@ -369,15 +361,16 @@ def FeatureEngineer(epochs, model_type='NN',
 
     if electrode_median:
       print('Computing Median over electrodes')
-      X = np.expand_dims(np.median(X,axis=len(X.shape)-1),2)
+      X = np.expand_dims(np.median(X,axis=len(X.shape)-1),2) 
         
+    ## Model Reshapes:    
     # reshape for CNN
     if model_type == 'CNN':
       print('Size X before reshape for CNN: ' + str(X.shape))
       X = np.expand_dims(X,3 )
       print('Size X before reshape for CNN: ' + str(X.shape))
       
-    # reshape for CNN
+    # reshape for CNN3D
     if model_type == 'CNN3D':
       print('Size X before reshape for CNN3D: ' + str(X.shape))
       X = np.expand_dims(np.expand_dims(X,3),4)
@@ -389,9 +382,7 @@ def FeatureEngineer(epochs, model_type='NN',
       X = np.reshape(X, (X.shape[0], np.prod(X.shape[1:])))
       print('Size X after reshape for Auto: ' + str(X.shape))
             
-    
 
-    
   #Normalize X - need to save mean and std for future test + val
   if normalization:
     print('Normalizing X')
@@ -400,20 +391,25 @@ def FeatureEngineer(epochs, model_type='NN',
   # convert class vectors to one hot Y and recast X
   Y = keras.utils.to_categorical(Y_class,feats.num_classes)
   X = X.astype('float32')
-
+  
+  # add watermark for testing models
+  if watermark:
+    X[Y[:,0]==0,0:2,] = 0
+    X[Y[:,0]==1,0:2,] = 1
+  
+  # Compute model input shape
+  feats.input_shape = X.shape[1:]
+  
   # Split training test and validation data 
   val_prop = val_split / (1-test_split)
   feats.x_train, feats.x_test, feats.y_train, feats.y_test = train_test_split(X, Y, test_size=test_split,random_state=random_seed) 
   feats.x_train, feats.x_val, feats.y_train, feats.y_val = train_test_split(feats.x_train, feats.y_train, test_size=val_prop, random_state=random_seed)
 
-  # Compute model input shape
-  feats.input_shape = X.shape[1:]
-  
   #compute class weights for uneven classes
-  feats.y_ints = [y.argmax() for y in feats.y_train]
+  y_ints = [y.argmax() for y in feats.y_train]
   feats.class_weights = class_weight.compute_class_weight('balanced',
-                                                 np.unique(feats.y_ints),
-                                                 feats.y_ints)
+                                                 np.unique(y_ints),
+                                                 y_ints)
   
   #Print some outputs
   print('Combined X Shape: ' + str(X.shape))
