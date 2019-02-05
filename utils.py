@@ -680,6 +680,8 @@ def TrainTestVal(model,feats,batch_size=1,train_epochs=20):
     print('Test loss:', score)
     print('Test accuracy:', acc)
 
+    return model
+
 
 
 
