@@ -252,7 +252,7 @@ def PreProcess(raw, event_id, plot_psd=True, filter_data=True,
   return epochs
 
 
-   
+  
 def FeatureEngineer(epochs, model_type='NN',
                     frequency_domain=0,
                     normalization=True, electrode_median=False,
@@ -325,11 +325,14 @@ def FeatureEngineer(epochs, model_type='NN',
     print(event_names[0] + ' Frequencies: ' + str(len(tfr0.freqs)))
 
     
-    #Construct X
+    #Construct X and Y
     X = np.append(cond0_power_out,cond1_power_out,0);
-   #Append Data
     Y_class = np.append(np.zeros(len(cond0_power_out)), np.ones(len(cond1_power_out)),0)
-
+   
+    if electrode_median:
+      print('Computing Median over electrodes')
+      X = np.expand_dims(np.median(X,axis=len(X.shape)-1),2) 
+       
     #reshape to trials x times x variables for LSTM and NN model
     if model_type == 'NN' or model_type == 'LSTM':
       X = np.reshape(X, (X.shape[0], X.shape[1], np.prod(X.shape[2:])))
@@ -424,7 +427,6 @@ def FeatureEngineer(epochs, model_type='NN',
   print('Class Weights: ' + str(feats.class_weights))
 
   return feats
-
 
 
 
