@@ -3,6 +3,7 @@
 #chomd +x install.sh
 #bash install.sh
 #!git clone https://github.com/kylemath/eeg-notebooks
+#python
 from utils import *
 data_dir = 'visual/cueing'
 subs = [101,102]
