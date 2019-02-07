@@ -1,6 +1,6 @@
 ## DeepEEG ##
 
-MNE/Keras/Tensorflow framework for classification of EEG data
+MNE/Keras/Tensorflow library for classification of EEG data
 
 * [Kyle E. Mathewson](https://github.com/kylemath)
 * [Kory W. Mathewson](https://github.com/korymath)
