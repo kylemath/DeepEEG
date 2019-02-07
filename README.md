@@ -12,6 +12,56 @@ Keras/Tensorflow deep learning stacks that processes EEG trials or raw files fro
 Colab Notebook Example:
 https://colab.research.google.com/github/kylemath/DeepEEG/blob/master/notebooks/DeepEEG.ipynb
 
+Getting Started Locally:
+
+
+To prepare your environment the first time:
+```python
+conda create -n deepeeg
+source activate deepeeg
+git clone https://github.com/kylemath/DeepEEG/
+cd DeepEEG
+bash install.sh
+git clone https://github.com/kylemath/eeg-notebooks
+```
+
+
+This loads in some example data from eeg-notebooks
+
+```python
+from utils import *
+data_dir = 'visual/cueing'
+subs = [101,102]
+nsesh = 2
+event_id = {'LeftCue': 1,'RightCue': 2}
+```
+Load muse data, preprocess into trials,prepare for model, create model, and train and test model
+
+```python
+#Load Data
+raw = LoadMuseData(subs,nsesh,data_dir)
+```
+
+```python
+#Pre-Process EEG Data
+epochs = PreProcess(raw,event_id)
+```
+
+```python
+#Engineer Features for Model
+feats = FeatureEngineer(epochs)
+```
+
+```python
+#Create Model
+model,_ = CreateModel(feats)
+```
+
+```python
+#Train with validation, then Test
+TrainTestVal(model,feats)
+```
+
 Strategy:
 * Load in Brain Products or Interaxon Muse files with mne as mne.raw, 
 * PreProcess(mne.raw) - normal ERP preprocessing to get trials by time by electrode mne.epochs
