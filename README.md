@@ -21,6 +21,7 @@ conda create -n deepeeg
 source activate deepeeg
 git clone https://github.com/kylemath/DeepEEG/
 cd DeepEEG
+chmod +x install.sh
 bash install.sh
 git clone https://github.com/kylemath/eeg-notebooks
 ```
