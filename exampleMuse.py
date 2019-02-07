@@ -1,3 +1,7 @@
+#conda create -n deepeeg
+#source activate deepeeg
+#bash install.sh
+#!git clone https://github.com/kylemath/eeg-notebooks
 from utils import *
 load_verbose = True
 data_dir = 'visual/cueing'
