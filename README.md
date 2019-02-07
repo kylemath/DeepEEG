@@ -24,6 +24,7 @@ cd DeepEEG
 chmod +x install.sh
 bash install.sh
 git clone https://github.com/kylemath/eeg-notebooks
+python
 ```
 
 
