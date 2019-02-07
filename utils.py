@@ -81,6 +81,19 @@ def load_data(filename,data_type='muse',plot_sensors=True,plot_raw=True,plot_raw
     return raw, sfreq
 
 
+def LoadMuseData(subs,nsesh,data_dir,load_verbose=False,sfreq=256.):
+  nsubs = len(subs)
+  raw = []
+  print('Loading Data')
+  for isub,sub in enumerate(subs):
+    print('Subject number ' + str(isub+1) + '/' + str(nsubs))
+    for isesh in range(nsesh):
+      print(' Session number ' + str(isesh+1) + '/' + str(nsesh))
+      raw.append(muse_load_data(data_dir, sfreq=sfreq ,subject_nb=sub, 
+                    session_nb=isesh+1,verbose=load_verbose))
+  raw = concatenate_raws(raw)
+  return raw
+
 #from eeg-notebooks
 def load_muse_csv_as_raw(filename, sfreq=256., ch_ind=[0, 1, 2, 3],
                          stim_ind=5, replace_ch_names=None, verbose=1):
@@ -179,11 +192,11 @@ def muse_load_data(data_dir, subject_nb=1, session_nb=1, sfreq=256.,
 
 
 
-def PreProcess(raw, event_id, plot_psd=True, filter_data=True, 
-               eeg_filter_highpass=1, plot_events=True, epoch_time=(-1,2), 
+def PreProcess(raw, event_id, plot_psd=False, filter_data=True, 
+               eeg_filter_highpass=1, plot_events=False, epoch_time=(-.2,1), 
                baseline=(-.2,0), rej_thresh_uV=200,
-               epoch_decim=1, plot_electrodes=True,
-               plot_erp=True):
+               epoch_decim=1, plot_electrodes=False,
+               plot_erp=False):
 
 
 
@@ -614,9 +627,9 @@ def CreateModel(feats,units=[16,8,4,8,16],dropout=.25,batch_norm=True,filt_size=
 
 
 
-def TrainTestVal(model,feats,batch_size=1,train_epochs=20):
+def TrainTestVal(model,feats,batch_size=2,train_epochs=20):
   print('Training Model:')
-
+  print(vars(model))
   #Train Model
   if feats.model_type == 'AUTO' or feats.model_type == 'AUTODeep':
     print('Training autoencoder:')
