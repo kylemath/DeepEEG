@@ -78,42 +78,42 @@ You can run the unittests with the following command:
 python -m unittest
 ```
 
-Strategy:
+## Strategy
 * Load in Brain Products or Interaxon Muse files with mne as mne.raw,
 * PreProcess(mne.raw) - normal ERP preprocessing to get trials by time by electrode mne.epochs
 * FeatureEngineer(mne.epochs) - Either time domain or frequency domain feature extraction in DeepEEG.Feats class
 * CreateModel(DeepEEG.Feats) - Customizes DeepEEG.Model for input data, pick from NN, CNN, LSTM, or AutoEncoders, splits data
 * TrainTestVal(DeepEEG.Feats,DeepEEG.Model) - Train the model, validate it during training, and test it once complete, Plot loss during learning and at test
 
-Dataset example:
+## Dataset example
 * Interaxon Muse - eeg-notebooks -  https://github.com/kylemath/eeg-notebooks
 * Brain Recorder Data
 
-API:
+## API
 * Input the data directory and subject numbers of any eeg-notebook experiment (https://github.com/kylemath/eeg-notebooks)
 * Load in .vhdr brain products files by filename with mne io features
 * FeatureEngineer can load any mne Epoch object too - https://martinos.org/mne/stable/generated/mne.Epochs.html
 
-LearningModels:
+## LearningModels
 * First try basic Neural Network (NN)
 * Then try Convolution Neural Net (CNN)
 * New is a 3D convolutional NN (CNN3D) in the frequency domain
 * Then try Long-Short Term Memory Recurrant Neural Net (LSTM)
 * Can also try using (AUTO) or (AUTODeep) to clean eeg data, or create features for other models
 
-DataModels:
+## DataModels
 * Try subject specific models
 * Then pool data over all subjects
 * Then try multilevel models (in the works)
 
-Using:
+## Code References
 * https://github.com/kylemath/eeg-notebooks
 * https://github.com/mne-tools/mne-python
 * https://github.com/keras-team/keras/blob/master/examples/imdb_cnn_lstm.py
 * https://github.com/ml4a/ml4a-guides/blob/master/notebooks/keras_classification.ipynb
 * https://github.com/tevisgehr/EEG-Classification
 
-Resources:
+## Resources
 * https://arxiv.org/pdf/1901.05498.pdf
 * http://proceedings.mlr.press/v56/Thodoroff16.pdf
 * https://arxiv.org/abs/1511.06448
