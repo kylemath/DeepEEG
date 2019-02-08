@@ -119,3 +119,4 @@ python -m unittest
 * https://arxiv.org/abs/1511.06448
 * https://github.com/ml4a
 * http://oxfordre.com/neuroscience/view/10.1093/acrefore/9780190264086.001.0001/acrefore-9780190264086-e-46
+* https://arxiv.org/pdf/1811.10111.pdf
