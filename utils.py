@@ -226,8 +226,8 @@ def GrattonEmcpRaw(raw):
 
 def PreProcess(raw, event_id, plot_psd=False, filter_data=True,
                eeg_filter_highpass=1, plot_events=False, epoch_time=(-.2,1),
-               baseline=(-.2,0), rej_thresh_uV=200, rereference=False, emcp=False,
-               epoch_decim=1, plot_electrodes=False,
+               baseline=(-.2,0), rej_thresh_uV=200, rereference=False, 
+               emcp=False, epoch_decim=1, plot_electrodes=False,
                plot_erp=False):
 
 
