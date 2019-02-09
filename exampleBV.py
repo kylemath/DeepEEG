@@ -15,7 +15,7 @@ event_id = {'Standard': 1, 'Target': 2}
 #Load Data
 raw = LoadBVData(subs,sessions,data_dir,exp)
 #Pre-Process EEG Data
-epochs = PreProcess(raw,event_id,emcp=True,rereference=True,plot_erp=True)
+epochs = PreProcess(raw,event_id,emcp=True,rereference=False,plot_erp=True)
 #Engineer Features for Model
 feats = FeatureEngineer(epochs)
 #Create Model
