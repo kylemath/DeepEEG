@@ -13,7 +13,7 @@ from mne.channels import read_montage
 from mne.time_frequency import tfr_morlet
 from mne import channels, find_events, concatenate_raws
 from mne import pick_types, viz, io, Epochs, create_info
-from mne import pick_channels
+from mne import pick_channels, concatenate_epochs
 
 import numpy as np
 from numpy import genfromtxt
@@ -52,15 +52,15 @@ class Feats:
     self.x_val = j
     self.y_val = k
 
-def LoadBVData(subs,sessions,data_dir,exp):
+def LoadBVData(sub,sessions,data_dir,exp):
   raw = []
-  for isub,sub in enumerate(subs):       
-    print('Loading data for subject number: ' + sub)
-    for session in sessions:
-        fname = data_dir + exp + '/' + sub + '_' + exp + '_' + session + '.vhdr'
-        tempraw,sfreq = loadBV(fname,plot_sensors=False,plot_raw=False,
-                plot_raw_psd=False,stim_channel=True)
-        raw.append(tempraw)
+  #for isub,sub in enumerate(subs):       
+  print('Loading data for subject number: ' + sub)
+  for session in sessions:
+      fname = data_dir + exp + '/' + sub + '_' + exp + '_' + session + '.vhdr'
+      tempraw,sfreq = loadBV(fname,plot_sensors=False,plot_raw=False,
+              plot_raw_psd=False,stim_channel=True)
+      raw.append(tempraw)
   raw = concatenate_raws(raw)
   return raw
 
