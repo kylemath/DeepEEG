@@ -51,8 +51,32 @@ class Feats:
     self.x_val = j
     self.y_val = k
 
+def LoadBVData(subs,sessions,data_dir,exp):
+  raw = []
+  for isub,sub in enumerate(subs):       
+    print('Loading data for subject number: ' + sub)
+    for session in sessions:
+        fname = data_dir + exp + '/' + sub + '_' + exp + '_' + session + '.vhdr'
+        tempraw,sfreq = loadBV(fname,plot_sensors=False,plot_raw=False,
+                plot_raw_psd=False,stim_channel=True)
+        raw.append(tempraw)
+  raw = concatenate_raws(raw)
+  return raw
 
-def load_data(filename, data_type='muse', plot_sensors=True, plot_raw=True,
+def LoadMuseData(subs, nsesh, data_dir, load_verbose=False, sfreq=256.):
+  nsubs = len(subs)
+  raw = []
+  print('Loading Data')
+  for isub,sub in enumerate(subs):
+    print('Subject number ' + str(isub+1) + '/' + str(nsubs))
+    for isesh in range(nsesh):
+      print(' Session number ' + str(isesh+1) + '/' + str(nsesh))
+      raw.append(muse_load_data(data_dir, sfreq=sfreq ,subject_nb=sub,
+                    session_nb=isesh+1,verbose=load_verbose))
+  raw = concatenate_raws(raw)
+  return raw
+
+def loadBV(filename, plot_sensors=True, plot_raw=True,
   plot_raw_psd=True, stim_channel=False, ):
   """Load in recorder data files."""
 
@@ -81,20 +105,6 @@ def load_data(filename, data_type='muse', plot_sensors=True, plot_raw=True,
     raw.plot_psd(fmin=.1, fmax=100 )
 
   return raw, sfreq
-
-
-def LoadMuseData(subs, nsesh, data_dir, load_verbose=False, sfreq=256.):
-  nsubs = len(subs)
-  raw = []
-  print('Loading Data')
-  for isub,sub in enumerate(subs):
-    print('Subject number ' + str(isub+1) + '/' + str(nsubs))
-    for isesh in range(nsesh):
-      print(' Session number ' + str(isesh+1) + '/' + str(nsesh))
-      raw.append(muse_load_data(data_dir, sfreq=sfreq ,subject_nb=sub,
-                    session_nb=isesh+1,verbose=load_verbose))
-  raw = concatenate_raws(raw)
-  return raw
 
 #from eeg-notebooks
 def load_muse_csv_as_raw(filename, sfreq=256., ch_ind=[0, 1, 2, 3],
@@ -197,23 +207,20 @@ def muse_load_data(data_dir, subject_nb=1, session_nb=1, sfreq=256.,
                                 verbose=verbose)
 
 
-def GrattonEmcp(data):
-  raw = data
-  raw_eeg = raw[:-2,:][0]
-  raw_eog = raw[-2:,:][0]
+def GrattonEmcpRaw(raw):
+  raw_eeg = raw.copy().pick_types(eeg=True)[:][0]
+  raw_eog = raw.copy().pick_types(eog=True)[:][0]
   b = np.linalg.solve(np.dot(raw_eog,raw_eog.T), np.dot(raw_eog,raw_eeg.T))
-  print(b.shape)
   eeg_corrected = (raw_eeg.T - np.dot(raw_eog.T,b)).T
   raw_new = raw.copy()
-  raw_new._data[:-2,:] = eeg_corrected
-  data = raw_new
-  return data
+  raw_new._data[pick_types(raw.info,eeg=True),:] = eeg_corrected
+  return raw_new
 
 
 
 def PreProcess(raw, event_id, plot_psd=False, filter_data=True,
                eeg_filter_highpass=1, plot_events=False, epoch_time=(-.2,1),
-               baseline=(-.2,0), rej_thresh_uV=200, emcp=True,
+               baseline=(-.2,0), rej_thresh_uV=200, emcp=False,
                epoch_decim=1, plot_electrodes=False,
                plot_erp=False):
 
@@ -249,7 +256,7 @@ def PreProcess(raw, event_id, plot_psd=False, filter_data=True,
   #Eye Correction
   if emcp:
     print('Eye Movement Correction')
-    raw = GrattonEmcp(raw)
+    raw = GrattonEmcpRaw(raw)
 
   #Epoching
   events = find_events(raw,shortest_event=1)

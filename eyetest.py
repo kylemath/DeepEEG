@@ -1,7 +1,11 @@
 from utils import *
-data_dir = 'visual/cueing'
-subs = [101]
-nsesh = 1
-event_id = {'LeftCue': 1,'RightCue': 2}
-raw = LoadMuseData(subs,nsesh,data_dir)
-raw = GrattonEmcp(raw)
+data_dir = '/Users/kylemathewson/Desktop/'
+exp = 'bikepark'
+subs = [ '009']
+sessions = ['quiet','traffic']
+nsesh = len(sessions)
+event_id = {'Standard': 1, 'Target': 2}
+raw = LoadBVData(subs,sessions,data_dir,exp)
+raw.plot(scalings='auto')
+raw = GrattonEmcpRaw(raw)
+raw.plot(scalings='auto')
