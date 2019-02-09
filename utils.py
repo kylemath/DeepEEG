@@ -197,10 +197,23 @@ def muse_load_data(data_dir, subject_nb=1, session_nb=1, sfreq=256.,
                                 verbose=verbose)
 
 
+def GrattonEmcp(data):
+  raw = data
+  raw_eeg = raw[:-2,:][0]
+  raw_eog = raw[-2:,:][0]
+  b = np.linalg.solve(np.dot(raw_eog,raw_eog.T), np.dot(raw_eog,raw_eeg.T))
+  print(b.shape)
+  eeg_corrected = (raw_eeg.T - np.dot(raw_eog.T,b)).T
+  raw_new = raw.copy()
+  raw_new._data[:-2,:] = eeg_corrected
+  data = raw_new
+  return data
+
+
 
 def PreProcess(raw, event_id, plot_psd=False, filter_data=True,
                eeg_filter_highpass=1, plot_events=False, epoch_time=(-.2,1),
-               baseline=(-.2,0), rej_thresh_uV=200,
+               baseline=(-.2,0), rej_thresh_uV=200, emcp=True,
                epoch_decim=1, plot_electrodes=False,
                plot_erp=False):
 
@@ -232,6 +245,11 @@ def PreProcess(raw, event_id, plot_psd=False, filter_data=True,
 
   #artifact rejection
   rej_thresh = rej_thresh_uV*1e-6
+
+  #Eye Correction
+  if emcp:
+    print('Eye Movement Correction')
+    raw = GrattonEmcp(raw)
 
   #Epoching
   events = find_events(raw,shortest_event=1)
