@@ -13,6 +13,7 @@ from mne.channels import read_montage
 from mne.time_frequency import tfr_morlet
 from mne import channels, find_events, concatenate_raws
 from mne import pick_types, viz, io, Epochs, create_info
+from mne import pick_channels
 
 import numpy as np
 from numpy import genfromtxt
@@ -206,6 +207,11 @@ def muse_load_data(data_dir, subject_nb=1, session_nb=1, sfreq=256.,
                                 replace_ch_names=replace_ch_names,
                                 verbose=verbose)
 
+def mastoidReref(raw):
+  ref_idx = pick_channels(raw.info['ch_names'],['M2'])
+  eeg_idx = pick_types(raw.info,eeg=True)
+  raw._data[eeg_idx,:] =  raw._data[eeg_idx,:]  -  raw._data[ref_idx,:] * .5 ;
+  return raw
 
 def GrattonEmcpRaw(raw):
   raw_eeg = raw.copy().pick_types(eeg=True)[:][0]
@@ -220,7 +226,7 @@ def GrattonEmcpRaw(raw):
 
 def PreProcess(raw, event_id, plot_psd=False, filter_data=True,
                eeg_filter_highpass=1, plot_events=False, epoch_time=(-.2,1),
-               baseline=(-.2,0), rej_thresh_uV=200, emcp=False,
+               baseline=(-.2,0), rej_thresh_uV=200, rereference=False, emcp=False,
                epoch_decim=1, plot_electrodes=False,
                plot_erp=False):
 
@@ -241,6 +247,9 @@ def PreProcess(raw, event_id, plot_psd=False, filter_data=True,
     i += 1
 
   #Filtering
+  if rereference:
+    print('Rerefering to average mastoid')
+    raw = mastoidReref(raw)
 
   if filter_data:
     print('Filtering Data')
@@ -250,9 +259,6 @@ def PreProcess(raw, event_id, plot_psd=False, filter_data=True,
   if plot_psd:
     raw.plot_psd(fmin=eeg_filter_highpass, fmax=nsfreq/2 )
 
-  #artifact rejection
-  rej_thresh = rej_thresh_uV*1e-6
-
   #Eye Correction
   if emcp:
     print('Eye Movement Correction')
@@ -261,6 +267,8 @@ def PreProcess(raw, event_id, plot_psd=False, filter_data=True,
   #Epoching
   events = find_events(raw,shortest_event=1)
   color = {1: 'red', 2: 'black'}
+  #artifact rejection
+  rej_thresh = rej_thresh_uV*1e-6
 
   #plot event timing
   if plot_events:
@@ -290,7 +298,7 @@ def PreProcess(raw, event_id, plot_psd=False, filter_data=True,
     evoked_dict['eventZero'] = evoked_zero
     evoked_dict['eventOne'] = evoked_one
     colors = dict(eventZero="Red", eventOne="Blue")
-    pick = [0,1,2,3]
+    pick = pick_types(epochs.info, eeg=True)
     viz.plot_compare_evokeds(evoked_dict, picks=pick, colors=colors,
                                  split_legend=True)
 
