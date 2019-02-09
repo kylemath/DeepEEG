@@ -299,10 +299,10 @@ def PreProcess(raw, event_id, plot_psd=False, filter_data=True,
 
 
 def FeatureEngineer(epochs, model_type='NN',
-                    frequency_domain=0,
+                    frequency_domain=False,
                     normalization=True, electrode_median=False,
-                    wavelet_decim=0,flims=(3,30),
-                    f_bins=20,wave_cycles=6,
+                    wavelet_decim=1,flims=(3,30),
+                    f_bins=20,wave_cycles=3,
                     spect_baseline=[-1,-.5],
                     electrodes_out=[11,12,13,14,15],
                     test_split = 0.2, val_split = 0.2,
