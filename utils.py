@@ -52,16 +52,12 @@ class Feats:
     self.x_val = j
     self.y_val = k
 
-def LoadBVData(sub,sessions,data_dir,exp):
-  raw = []
+def LoadBVData(sub,session,data_dir,exp):
   #for isub,sub in enumerate(subs):       
   print('Loading data for subject number: ' + sub)
-  for session in sessions:
-      fname = data_dir + exp + '/' + sub + '_' + exp + '_' + session + '.vhdr'
-      tempraw,sfreq = loadBV(fname,plot_sensors=False,plot_raw=False,
-              plot_raw_psd=False,stim_channel=True)
-      raw.append(tempraw)
-  raw = concatenate_raws(raw)
+  fname = data_dir + exp + '/' + sub + '_' + exp + '_' + session + '.vhdr'
+  raw,sfreq = loadBV(fname,plot_sensors=False,plot_raw=False,
+          plot_raw_psd=False,stim_channel=True)
   return raw
 
 def LoadMuseData(subs, nsesh, data_dir, load_verbose=False, sfreq=256.):
