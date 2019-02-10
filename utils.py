@@ -276,7 +276,7 @@ def PreProcess(raw, event_id, plot_psd=False, filter_data=True,
                   tmin=tmin, tmax=tmax, baseline=baseline,
                   preload=True,reject={'eeg':rej_thresh},
                   verbose=False, decim=epoch_decim)
-  print('sample drop %: ', (1 - len(epochs.events)/len(events)) * 100)
+  print('Remaining Trials: ' + str(len(epochs)))
 
   if plot_electrodes or plot_erp:
     evoked_zero = epochs[event_names[0]].average()
@@ -687,7 +687,6 @@ def CreateModel(feats,units=[16,8,4,8,16], dropout=.25,
 
 def TrainTestVal(model, feats, batch_size=2, train_epochs=20, show_plots=True):
   print('Training Model:')
-  print(vars(model))
   # Train Model
   if feats.model_type == 'AUTO' or feats.model_type == 'AUTODeep':
     print('Training autoencoder:')

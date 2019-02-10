@@ -8,7 +8,7 @@ from utils import *
 data_dir = '/Users/kylemathewson/Desktop/data/'
 exp = 'P3'
 #subs = ['001','002','004','005','006','007','008','010']
-subs = [ '001']
+subs = [ '005']
 
 sessions = ['ActiveDry','ActiveWet','PassiveWet']
 
@@ -22,9 +22,14 @@ for sub in subs:
 		#Load Data
 		raw = LoadBVData(sub,session,data_dir,exp)
 		#Pre-Process EEG Data
-		epochs.append(PreProcess(raw,event_id,
+		temp_epochs = PreProcess(raw,event_id,
 							emcp=True, rereference=True,
-							plot_erp=True, rej_thresh_uV=200))
+							plot_erp=False, rej_thresh_uV=250)
+		if len(temp_epochs) > 0:
+			epochs.append(temp_epochs)
+		else:
+			print('Sub ' + sub + ', Cond ' 
+					+ session + 'all trials rejected')
 
 print(epochs)
 epochs = concatenate_epochs(epochs)	
