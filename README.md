@@ -106,6 +106,9 @@ python -m unittest test
 * Then pool data over all subjects
 * Then try multilevel models (in the works)
 
+## Benchmarks
+* Goal build models that can be integrated with https://github.com/NeuroTechX/moabb/
+
 ## Code References
 * https://github.com/kylemath/eeg-notebooks
 * https://github.com/mne-tools/mne-python
