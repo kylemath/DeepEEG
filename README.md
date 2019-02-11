@@ -19,7 +19,7 @@ Prepare your environment the first time:
 
 ```sh
 # using conda
-conda create -n deepeeg
+conda create -n deepeeg python=3
 source activate deepeeg
 # using virtualenv
 # python3 -m venv deepeeg
