@@ -94,6 +94,15 @@ python -m unittest test
 * Load in .vhdr brain products files by filename with mne io features
 * FeatureEngineer can load any mne Epoch object too - https://martinos.org/mne/stable/generated/mne.Epochs.html
 
+## Preprocessing
+* To be moved to another repo eventually
+* Bandpass filter
+* Regression Eye movement correction (if eye channels)
+  - EOG Regression example: https://cbrnr.github.io/2017/10/20/removing-eog-regression/
+  - Original emcp paper: https://apps.dtic.mil/dtic/tr/fulltext/u2/a125699.pdf
+* Epoch segmentation (time limits, baseline correction)
+* Artifact rejection
+
 ## LearningModels
 * First try basic Neural Network (NN)
 * Then try Convolution Neural Net (CNN)

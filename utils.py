@@ -13,6 +13,7 @@ from mne.channels import read_montage
 from mne.time_frequency import tfr_morlet
 from mne import channels, find_events, concatenate_raws
 from mne import pick_types, viz, io, Epochs, create_info
+from mne import pick_channels, concatenate_epochs
 
 import numpy as np
 from numpy import genfromtxt
@@ -51,8 +52,28 @@ class Feats:
     self.x_val = j
     self.y_val = k
 
+def LoadBVData(sub,session,data_dir,exp):
+  #for isub,sub in enumerate(subs):       
+  print('Loading data for subject number: ' + sub)
+  fname = data_dir + exp + '/' + sub + '_' + exp + '_' + session + '.vhdr'
+  raw,sfreq = loadBV(fname,plot_sensors=False,plot_raw=False,
+          plot_raw_psd=False,stim_channel=True)
+  return raw
 
-def load_data(filename, data_type='muse', plot_sensors=True, plot_raw=True,
+def LoadMuseData(subs, nsesh, data_dir, load_verbose=False, sfreq=256.):
+  nsubs = len(subs)
+  raw = []
+  print('Loading Data')
+  for isub,sub in enumerate(subs):
+    print('Subject number ' + str(isub+1) + '/' + str(nsubs))
+    for isesh in range(nsesh):
+      print(' Session number ' + str(isesh+1) + '/' + str(nsesh))
+      raw.append(muse_load_data(data_dir, sfreq=sfreq ,subject_nb=sub,
+                    session_nb=isesh+1,verbose=load_verbose))
+  raw = concatenate_raws(raw)
+  return raw
+
+def loadBV(filename, plot_sensors=True, plot_raw=True,
   plot_raw_psd=True, stim_channel=False, ):
   """Load in recorder data files."""
 
@@ -81,20 +102,6 @@ def load_data(filename, data_type='muse', plot_sensors=True, plot_raw=True,
     raw.plot_psd(fmin=.1, fmax=100 )
 
   return raw, sfreq
-
-
-def LoadMuseData(subs, nsesh, data_dir, load_verbose=False, sfreq=256.):
-  nsubs = len(subs)
-  raw = []
-  print('Loading Data')
-  for isub,sub in enumerate(subs):
-    print('Subject number ' + str(isub+1) + '/' + str(nsubs))
-    for isesh in range(nsesh):
-      print(' Session number ' + str(isesh+1) + '/' + str(nsesh))
-      raw.append(muse_load_data(data_dir, sfreq=sfreq ,subject_nb=sub,
-                    session_nb=isesh+1,verbose=load_verbose))
-  raw = concatenate_raws(raw)
-  return raw
 
 #from eeg-notebooks
 def load_muse_csv_as_raw(filename, sfreq=256., ch_ind=[0, 1, 2, 3],
@@ -196,12 +203,27 @@ def muse_load_data(data_dir, subject_nb=1, session_nb=1, sfreq=256.,
                                 replace_ch_names=replace_ch_names,
                                 verbose=verbose)
 
+def mastoidReref(raw):
+  ref_idx = pick_channels(raw.info['ch_names'],['M2'])
+  eeg_idx = pick_types(raw.info,eeg=True)
+  raw._data[eeg_idx,:] =  raw._data[eeg_idx,:]  -  raw._data[ref_idx,:] * .5 ;
+  return raw
+
+def GrattonEmcpRaw(raw):
+  raw_eeg = raw.copy().pick_types(eeg=True)[:][0]
+  raw_eog = raw.copy().pick_types(eog=True)[:][0]
+  b = np.linalg.solve(np.dot(raw_eog,raw_eog.T), np.dot(raw_eog,raw_eeg.T))
+  eeg_corrected = (raw_eeg.T - np.dot(raw_eog.T,b)).T
+  raw_new = raw.copy()
+  raw_new._data[pick_types(raw.info,eeg=True),:] = eeg_corrected
+  return raw_new
+
 
 
 def PreProcess(raw, event_id, plot_psd=False, filter_data=True,
                eeg_filter_highpass=1, plot_events=False, epoch_time=(-.2,1),
-               baseline=(-.2,0), rej_thresh_uV=200,
-               epoch_decim=1, plot_electrodes=False,
+               baseline=(-.2,0), rej_thresh_uV=200, rereference=False, 
+               emcp=False, epoch_decim=1, plot_electrodes=False,
                plot_erp=False):
 
 
@@ -221,6 +243,9 @@ def PreProcess(raw, event_id, plot_psd=False, filter_data=True,
     i += 1
 
   #Filtering
+  if rereference:
+    print('Rerefering to average mastoid')
+    raw = mastoidReref(raw)
 
   if filter_data:
     print('Filtering Data')
@@ -230,12 +255,16 @@ def PreProcess(raw, event_id, plot_psd=False, filter_data=True,
   if plot_psd:
     raw.plot_psd(fmin=eeg_filter_highpass, fmax=nsfreq/2 )
 
-  #artifact rejection
-  rej_thresh = rej_thresh_uV*1e-6
+  #Eye Correction
+  if emcp:
+    print('Eye Movement Correction')
+    raw = GrattonEmcpRaw(raw)
 
   #Epoching
   events = find_events(raw,shortest_event=1)
   color = {1: 'red', 2: 'black'}
+  #artifact rejection
+  rej_thresh = rej_thresh_uV*1e-6
 
   #plot event timing
   if plot_events:
@@ -247,7 +276,7 @@ def PreProcess(raw, event_id, plot_psd=False, filter_data=True,
                   tmin=tmin, tmax=tmax, baseline=baseline,
                   preload=True,reject={'eeg':rej_thresh},
                   verbose=False, decim=epoch_decim)
-  print('sample drop %: ', (1 - len(epochs.events)/len(events)) * 100)
+  print('Remaining Trials: ' + str(len(epochs)))
 
   if plot_electrodes or plot_erp:
     evoked_zero = epochs[event_names[0]].average()
@@ -265,7 +294,7 @@ def PreProcess(raw, event_id, plot_psd=False, filter_data=True,
     evoked_dict['eventZero'] = evoked_zero
     evoked_dict['eventOne'] = evoked_one
     colors = dict(eventZero="Red", eventOne="Blue")
-    pick = [0,1,2,3]
+    pick = pick_types(epochs.info, eeg=True)
     viz.plot_compare_evokeds(evoked_dict, picks=pick, colors=colors,
                                  split_legend=True)
 
@@ -274,10 +303,10 @@ def PreProcess(raw, event_id, plot_psd=False, filter_data=True,
 
 
 def FeatureEngineer(epochs, model_type='NN',
-                    frequency_domain=0,
+                    frequency_domain=False,
                     normalization=True, electrode_median=False,
-                    wavelet_decim=0,flims=(3,30),
-                    f_bins=20,wave_cycles=6,
+                    wavelet_decim=1,flims=(3,30),
+                    f_bins=20,wave_cycles=3,
                     spect_baseline=[-1,-.5],
                     electrodes_out=[11,12,13,14,15],
                     test_split = 0.2, val_split = 0.2,
@@ -658,7 +687,6 @@ def CreateModel(feats,units=[16,8,4,8,16], dropout=.25,
 
 def TrainTestVal(model, feats, batch_size=2, train_epochs=20, show_plots=True):
   print('Training Model:')
-  print(vars(model))
   # Train Model
   if feats.model_type == 'AUTO' or feats.model_type == 'AUTODeep':
     print('Training autoencoder:')
