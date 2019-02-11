@@ -30,7 +30,6 @@ source activate deepeeg
 git clone https://github.com/kylemath/DeepEEG/
 cd DeepEEG
 ./install.sh
-git clone https://github.com/kylemath/eeg-notebooks
 ```
 
 You are now ready to run DeepEEG.
@@ -38,6 +37,7 @@ You are now ready to run DeepEEG.
 This loads in some example data from eeg-notebooks
 
 ```python
+git clone https://github.com/kylemath/eeg-notebooks
 from utils import *
 data_dir = 'visual/cueing'
 subs = [101,102]
