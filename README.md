@@ -76,7 +76,7 @@ TrainTestVal(model,feats)
 
 You can run the unittests with the following command:
 ```
-python -m unittest tests
+python3 -m unittest tests
 ```
 
 ## Strategy
