@@ -21,8 +21,8 @@ n_dipoles = 1
 epoch_duration = 2.
 n = 0
 sfreq = raw.info['sfreq']
-ampzero = 25
-ampone = 50
+ampzero = 50
+ampone = 300
 
 def data_fun_zero(times):
 	n = 0
@@ -74,16 +74,7 @@ raw = concatenate_raws([raw_sim_zero, raw_sim_one])
 epochs = PreProcess(raw,event_id,
 		plot_events=False,
 		epoch_time=(-0.2,2))
-
-
-#events = find_events(raw)
-
-#picks = mne.pick_types(raw.info, eeg=True, eog=True, meg=False, exclude='bads')
-#epochs = Epochs(raw, events, event_id, -0.2, epoch_duration, 
-#				picks=picks, preload=True)
-#evoked = epochs.average()
-
-#plot individual conditions evoked here
+#need to fix plot_erp and plot_electrodes  in utils.py
 
 feats = FeatureEngineer(epochs)
 model,_ = CreateModel(feats, units=[16,16])
