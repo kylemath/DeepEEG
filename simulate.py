@@ -21,41 +21,68 @@ n_dipoles = 1
 epoch_duration = 2.
 n = 0
 sfreq = raw.info['sfreq']
-def data_fun(times):
-	global n 
+ampzero = 25
+ampone = 50
+
+def data_fun_zero(times):
+	n = 0
 	n_samp = len(times)
 	window = np.zeros(n_samp)
 	start, stop = [int(ii * float(n_samp) / (2 * n_dipoles))
 					for ii in (2 * n, 2 * n + 1)]
-	window[start:stop] = 1.
-	n += 1
-	data = 25e-9 * np.sin(2. * np.pi * 10. * n * times)
+	window[start:stop] = np.hamming(stop-start)
+	n = 1
+	data = ampzero * 1e-9 * np.sin(2. * np.pi * 1. * n * times)
+	data *= window 
+	return data
+
+def data_fun_one(times):
+	n = 0
+	n_samp = len(times)
+	window = np.zeros(n_samp)
+	start, stop = [int(ii * float(n_samp) / (2 * n_dipoles))
+					for ii in (2 * n, 2 * n + 1)]
+	window[start:stop] = np.hamming(stop-start)
+	n = 1
+	data = ampone * 1e-9 * np.sin(2. * np.pi * 1. * n * times)
 	data *= window 
 	return data
 
 times = raw.times[:int(sfreq * epoch_duration)]
 src = read_source_spaces(src_fname)
-stc = simulate_sparse_stc(src, n_dipoles=n_dipoles, times=times,
-						data_fun=data_fun, random_state=0)
+stc_zero = simulate_sparse_stc(src, n_dipoles=n_dipoles, times=times,
+						data_fun=data_fun_zero, random_state=0)
+stc_one = simulate_sparse_stc(src, n_dipoles=n_dipoles, times=times,
+						data_fun=data_fun_one, random_state=0)
 
-raw_sim = simulate_raw(raw, stc, trans_fname, src, bem_fname, 
+fig,ax1 = plt.subplots(1)
+ax1.plot(times, 1e9 * stc_zero.data.T)
+ax1.plot(times, 1e9 * stc_one.data.T)
+ax1.set(ylabel='Amplitude (nAm)', xlabel='Time (sec)')
+mne.viz.utils.plt_show()
+
+
+event_id = {'Cond1': 1,'Cond2': 2}
+
+raw_sim_zero = simulate_raw(raw, stc_zero, trans_fname, src, bem_fname, 
+					cov='simple', iir_filter=[0.2, -0.2, 0.04],
+					ecg=True, blink=True, n_jobs=1, verbose=True)
+raw_sim_one = simulate_raw(raw, stc_one, trans_fname, src, bem_fname, 
 					cov='simple', iir_filter=[0.2, -0.2, 0.04],
 					ecg=True, blink=True, n_jobs=1, verbose=True)
 
-events = find_events(raw_sim)
+#TODO - inspect stim channel find out to change
+#TODO - change sim_one events to 2 here
+
+raw = concatenate_raws([raw_sim_zero, raw_sim_one])
+events = find_events(raw)
 picks = mne.pick_types(raw.info, eeg=True, eog=True, meg=False, exclude='bads')
-epochs = Epochs(raw_sim, events, 1, -0.2, epoch_duration, 
+epochs = Epochs(raw, events, 1, -0.2, epoch_duration, 
 				picks=picks, preload=True)
 evoked = epochs.average()
 
+#plot individual conditions evoked here
 
-
-
-fig = plt.figure()
-ax1 = plt.subplot(2,1,1)
-ax1.plot(times, 1e9 * stc.data.T)
-ax1.set(ylabel='Amplitude (nAm)', xlabel='Time (sec)')
-
-ax2 = plt.subplot(2,1,2)
-ax2 = plt.plot(evoked.times,evoked._data.T)
-mne.viz.utils.plt_show()
+feats = FeatureEngineer(epochs)
+model,_ = CreateModel(feats, units=[16,16])
+TrainTestVal(model,feats)
