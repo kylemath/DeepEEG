@@ -55,14 +55,6 @@ stc_zero = simulate_sparse_stc(src, n_dipoles=n_dipoles, times=times,
 stc_one = simulate_sparse_stc(src, n_dipoles=n_dipoles, times=times,
 						data_fun=data_fun_one, random_state=0)
 
-fig,ax1 = plt.subplots(1)
-ax1.plot(times, 1e9 * stc_zero.data.T)
-ax1.plot(times, 1e9 * stc_one.data.T)
-ax1.set(ylabel='Amplitude (nAm)', xlabel='Time (sec)')
-mne.viz.utils.plt_show()
-
-
-event_id = {'Cond1': 1,'Cond2': 2}
 
 raw_sim_zero = simulate_raw(raw, stc_zero, trans_fname, src, bem_fname, 
 					cov='simple', iir_filter=[0.2, -0.2, 0.04],
@@ -71,18 +63,29 @@ raw_sim_one = simulate_raw(raw, stc_one, trans_fname, src, bem_fname,
 					cov='simple', iir_filter=[0.2, -0.2, 0.04],
 					ecg=True, blink=True, n_jobs=1, verbose=True)
 
-#TODO - inspect stim channel find out to change
-#TODO - change sim_one events to 2 here
-
+event_id = {'CondZero': 1,'CondOne': 2}
+#replace 1 with 2 in second dataset
+stim_pick = raw_sim_one.info['ch_names'].index('STI 014')
+raw_sim_one._data[stim_pick][np.where(raw_sim_one._data[stim_pick]==1)] = 2
 raw = concatenate_raws([raw_sim_zero, raw_sim_one])
-events = find_events(raw)
-picks = mne.pick_types(raw.info, eeg=True, eog=True, meg=False, exclude='bads')
-epochs = Epochs(raw, events, 1, -0.2, epoch_duration, 
-				picks=picks, preload=True)
-evoked = epochs.average()
+
+
+
+epochs = PreProcess(raw,event_id,
+		plot_events=False,
+		epoch_time=(-0.2,2))
+
+
+#events = find_events(raw)
+
+#picks = mne.pick_types(raw.info, eeg=True, eog=True, meg=False, exclude='bads')
+#epochs = Epochs(raw, events, event_id, -0.2, epoch_duration, 
+#				picks=picks, preload=True)
+#evoked = epochs.average()
 
 #plot individual conditions evoked here
 
 feats = FeatureEngineer(epochs)
 model,_ = CreateModel(feats, units=[16,16])
 TrainTestVal(model,feats)
+

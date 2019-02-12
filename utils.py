@@ -241,6 +241,7 @@ def PreProcess(raw, event_id, plot_psd=False, filter_data=True,
   for key, value in sorted(event_id.items(), key=lambda x: (x[1], x[0])):
     event_names[i] = key
     i += 1
+  print('Event names: ' + str(event_names))
 
   #Filtering
   if rereference:
