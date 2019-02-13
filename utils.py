@@ -7,13 +7,16 @@ import os
 from glob import glob
 from collections import OrderedDict
 
+import mne
 from mne.io import RawArray
-from mne import read_evokeds
-from mne.channels import read_montage
-from mne.time_frequency import tfr_morlet
+from mne import read_evokeds, read_source_spaces, compute_covariance
 from mne import channels, find_events, concatenate_raws
 from mne import pick_types, viz, io, Epochs, create_info
 from mne import pick_channels, concatenate_epochs
+from mne.datasets import sample
+from mne.simulation import simulate_sparse_stc, simulate_raw
+from mne.channels import read_montage
+from mne.time_frequency import tfr_morlet
 
 import numpy as np
 from numpy import genfromtxt
@@ -202,6 +205,56 @@ def muse_load_data(data_dir, subject_nb=1, session_nb=1, sfreq=256.,
                                 stim_ind=stim_ind,
                                 replace_ch_names=replace_ch_names,
                                 verbose=verbose)
+
+
+def SimulateRaw(amp1 = 50, amp2 = 100, freq = 1.):
+
+  data_path = sample.data_path()
+  raw_fname = data_path + '/MEG/sample/sample_audvis_raw.fif'
+  trans_fname = data_path + '/MEG/sample/sample_audvis_raw-trans.fif'
+  src_fname = data_path + '/subjects/sample/bem/sample-oct-6-src.fif'
+  bem_fname = (data_path + 
+        '/subjects/sample/bem/sample-5120-5120-5120-bem-sol.fif')
+
+  raw = mne.io.read_raw_fif(raw_fname)
+  raw.set_eeg_reference(projection=True)
+  raw = raw.crop(0., 255.)
+    
+  epoch_duration = 1.
+  
+  def data_fun(amp, freq):
+    """Create function to create fake signal"""
+    def data_fun_inner(times):
+      """Create fake signal with no noise"""
+      n_samp = len(times)
+      window = np.zeros(n_samp)
+      start, stop = [int(ii * float(n_samp) / 2)
+        for ii in (0, 1)]
+      window[start:stop] = np.hamming(stop - start)
+      data = amp * 1e-9 * np.sin(2. * np.pi * freq * times)
+      data *= window
+      return data
+    return data_fun_inner
+
+  times = raw.times[:int(raw.info['sfreq'] * epoch_duration)]
+  src = read_source_spaces(src_fname)
+
+  stc_zero = simulate_sparse_stc(src, n_dipoles=1, times=times,
+              data_fun=data_fun(amp1,freq), random_state=0)
+  stc_one = simulate_sparse_stc(src, n_dipoles=1, times=times,
+              data_fun=data_fun(amp2,freq), random_state=0)
+
+  raw_sim_zero = simulate_raw(raw, stc_zero, trans_fname, src, bem_fname, 
+            cov='simple', blink=True, n_jobs=1, verbose=True)
+  raw_sim_one = simulate_raw(raw, stc_one, trans_fname, src, bem_fname, 
+            cov='simple', blink=True, n_jobs=1, verbose=True)
+
+  stim_pick = raw_sim_one.info['ch_names'].index('STI 014')
+  raw_sim_one._data[stim_pick][np.where(raw_sim_one._data[stim_pick]==1)] = 2
+  raw = concatenate_raws([raw_sim_zero, raw_sim_one])
+  event_id = {'CondZero': 1,'CondOne': 2}
+  return raw, event_id
+
 
 def mastoidReref(raw):
   ref_idx = pick_channels(raw.info['ch_names'],['M2'])
