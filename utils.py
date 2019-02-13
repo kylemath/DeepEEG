@@ -207,7 +207,21 @@ def muse_load_data(data_dir, subject_nb=1, session_nb=1, sfreq=256.,
                                 verbose=verbose)
 
 
-def SimulateRaw(amp1 = 50, amp2 = 100, freq = 1.):
+def SimulateRaw(amp1 = 50, amp2 = 100, freq = 1., batch=1):
+
+  """Create simulated raw data and events of two kinds
+  
+  Keyword Args:
+      amp1 (float): amplitude of first condition effect
+      amp2 (float): ampltiude of second condition effect, 
+          null hypothesis amp1=amp2
+      freq (float): Frequency of simulated signal 1. for ERP 10. for alpha
+      batch (int): number of groups of 255 trials in each condition
+  Returns: 
+      raw: simulated EEG MNE raw object with two event types
+      event_id: dict of the two events for input to PreProcess()
+  """
+
 
   data_path = sample.data_path()
   raw_fname = data_path + '/MEG/sample/sample_audvis_raw.fif'
@@ -216,10 +230,17 @@ def SimulateRaw(amp1 = 50, amp2 = 100, freq = 1.):
   bem_fname = (data_path + 
         '/subjects/sample/bem/sample-5120-5120-5120-bem-sol.fif')
 
-  raw = mne.io.read_raw_fif(raw_fname)
-  raw.set_eeg_reference(projection=True)
-  raw = raw.crop(0., 255.)
-    
+  
+  raw_single = mne.io.read_raw_fif(raw_fname)
+  raw_single.set_eeg_reference(projection=True)
+  raw_single = raw_single.crop(0., 255.)
+
+  #concatenate 4 raws together to make 1000 trials
+  raw = []
+  for i in range(batch):
+    raw.append(raw_single)
+  raw = concatenate_raws(raw)
+
   epoch_duration = 1.
   
   def data_fun(amp, freq):
@@ -366,12 +387,11 @@ def FeatureEngineer(epochs, model_type='NN',
                     test_split = 0.2, val_split = 0.2,
                     random_seed=1017, watermark = False):
 
-
-
-  #Takes epochs object as input and settings, outputs training, test and val data
-  #option to use frequency or time domain
-  #take epochs? tfr? or autoencoder encoded object?
-
+  """
+  Takes epochs object as input and settings, outputs training, test and val data
+  option to use frequency or time domain
+  take epochs? tfr? or autoencoder encoded object?
+  """
   np.random.seed(random_seed)
 
   #pull event names in order of trigger number

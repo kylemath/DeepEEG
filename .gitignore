@@ -1,6 +1,7 @@
 *.DS_Store
 eeg-notebooks/
 deepeeg/
+*.fif
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
