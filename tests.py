@@ -1,5 +1,6 @@
 import unittest
 from utils import Feats
+from utils import SimulateRaw
 from utils import PreProcess
 from utils import CreateModel
 from utils import TrainTestVal
@@ -51,6 +52,30 @@ class ExampleTest(unittest.TestCase):
                                    show_plots=False)
 
         self.assertLess(data['acc'], 1)
+
+
+    def test_simulate_raw(self):
+        """
+        Testing simulated data pipeline.
+        """
+        # Simulate Data
+        raw,event_id = SimulateRaw(amp1=50, amp2=60, freq=1.)
+
+        # Pre-Process EEG Data
+        epochs = PreProcess(raw,event_id)
+
+        # Engineer Features for Model
+        feats = FeatureEngineer(epochs)
+
+        # Create Model
+        model, _ = CreateModel(feats, units=[16,16])
+
+        # Train with validation, then Test
+        model, data = TrainTestVal(model,feats, 
+                    train_epochs=1,show_plots=False)
+
+        self.assertLess(data['acc'], 1)
+    
 
 if __name__ == '__main__':
     unittest.main()
