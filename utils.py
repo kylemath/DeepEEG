@@ -231,9 +231,10 @@ def SimulateRaw(amp1 = 50, amp2 = 100, freq = 1., batch=1):
         '/subjects/sample/bem/sample-5120-5120-5120-bem-sol.fif')
 
   
-  raw_single = mne.io.read_raw_fif(raw_fname)
+  raw_single = mne.io.read_raw_fif(raw_fname,preload=True)
   raw_single.set_eeg_reference(projection=True)
   raw_single = raw_single.crop(0., 255.)
+  raw_single = raw_single.copy().pick_types(meg=False, eeg=True, eog=True, stim=True)
 
   #concatenate 4 raws together to make 1000 trials
   raw = []
@@ -310,12 +311,11 @@ def PreProcess(raw, event_id, plot_psd=False, filter_data=True,
   eeg_filter_lowpass = nsfreq/2.5  #lower to avoid aliasing from decim
 
   #pull event names in order of trigger number
-  event_names = ['cond0','cond1']
+  event_names = ['A_error','B_error']
   i = 0
   for key, value in sorted(event_id.items(), key=lambda x: (x[1], x[0])):
     event_names[i] = key
     i += 1
-  print('Event names: ' + str(event_names))
 
   #Filtering
   if rereference:
@@ -359,19 +359,22 @@ def PreProcess(raw, event_id, plot_psd=False, filter_data=True,
 
   ## plot ERP at each electrode
   if plot_electrodes:
-    pick = pick_types(epochs.info, meg=False, eeg=True, eog=False)
-    fig_zero = evoked_zero.plot(spatial_colors=True, picks=pick)
-    fig_zero = evoked_one.plot(spatial_colors=True, picks=pick)
+    picks = pick_types(evoked_zero.info, meg=False, eeg=True, eog=False)
+    fig_zero = evoked_zero.plot(spatial_colors=True,picks=picks)
+    fig_zero = evoked_one.plot(spatial_colors=True,picks=picks)
 
   ## plot ERP in each condition on same plot
   if plot_erp:
-    evoked_dict = dict()
-    evoked_dict['eventZero'] = evoked_zero
-    evoked_dict['eventOne'] = evoked_one
     colors = dict(eventZero="Red", eventOne="Blue")
-    pick = pick_types(epochs.info, eeg=True)
-    viz.plot_compare_evokeds(evoked_dict, picks=pick, colors=colors,
-                                 split_legend=True)
+    #find the electrode most miximal on the head (highest in z)
+    picks = np.argmax([evoked_zero.info['chs'][i]['loc'][2] 
+              for i in range(len(evoked_zero.info['chs']))])
+    viz.plot_compare_evokeds({event_names[0]:evoked_zero,
+                              event_names[1]:evoked_one}, 
+                            colors={event_names[0]:"Red",
+                                    event_names[1]:"Blue"},
+                            picks=picks,split_legend=True
+                            )
 
   return epochs
 
