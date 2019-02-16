@@ -354,30 +354,25 @@ def PreProcess(raw, event_id, plot_psd=False, filter_data=True,
                   verbose=False, decim=epoch_decim)
   print('Remaining Trials: ' + str(len(epochs)))
 
-  if plot_electrodes or plot_erp:
-    evoked_zero = epochs[event_names[0]].average()
-    evoked_one = epochs[event_names[1]].average()
+  evoked_dict = {event_names[0]:epochs[event_names[0]].average(),
+                              event_names[1]:epochs[event_names[1]].average()}
 
   ## plot ERP at each electrode
   if plot_electrodes:
-    picks = pick_types(evoked_zero.info, meg=False, eeg=True, eog=False)
-    fig_zero = evoked_zero.plot(spatial_colors=True,picks=picks)
-    fig_zero = evoked_one.plot(spatial_colors=True,picks=picks)
+    picks = pick_types(evoked_dict[event_names[0]].info, meg=False, eeg=True, eog=False)
+    fig_zero = evoked_dict[event_names[0]].plot(spatial_colors=True,picks=picks)
+    fig_zero = evoked_dict[event_names[1]].plot(spatial_colors=True,picks=picks)
 
   ## plot ERP in each condition on same plot
   if plot_erp:
-    colors = dict(eventZero="Red", eventOne="Blue")
     #find the electrode most miximal on the head (highest in z)
-    picks = np.argmax([evoked_zero.info['chs'][i]['loc'][2] 
-              for i in range(len(evoked_zero.info['chs']))])
-    viz.plot_compare_evokeds({event_names[0]:evoked_zero,
-                              event_names[1]:evoked_one}, 
-                            colors={event_names[0]:"Red",
-                                    event_names[1]:"Blue"},
-                            picks=picks,split_legend=True
-                            )
+    picks = np.argmax([evoked_dict[event_names[0]].info['chs'][i]['loc'][2] 
+              for i in range(len(evoked_dict[event_names[0]].info['chs']))])
+    colors = {event_names[0]:"Red",event_names[1]:"Blue"}
+    viz.plot_compare_evokeds(evoked_dict,colors=colors,
+                            picks=picks,split_legend=True)
 
-  return epochs
+  return epochs, evoked_dict
 
 
 
