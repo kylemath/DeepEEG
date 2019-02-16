@@ -41,19 +41,20 @@ from sklearn.model_selection import train_test_split
 
 
 class Feats:
-  def __init__(self, a=2, b=[1,1], c=[16,], d=1, e='1',
-               f=1, g=1, h=1, i=1, j=1, k=1):
-    self.num_classes = a
-    self.class_weights = b
-    self.input_shape = c
-    self.new_times = d
-    self.model_type = e
-    self.x_train = f
-    self.y_train = g
-    self.x_test = h
-    self.y_test = i
-    self.x_val = j
-    self.y_val = k
+  def __init__(self, num_classes=2, class_weights=[1,1], input_shape=[16,], 
+               new_times=1, model_type='1', 
+               x_train=1, y_train=1, x_test=1, y_test=1, x_val=1, y_val=1):
+    self.num_classes = num_classes
+    self.class_weights = class_weights
+    self.input_shape = input_shape
+    self.new_times = new_times
+    self.model_type = model_type
+    self.x_train = x_train
+    self.y_train = y_train
+    self.x_test = x_test
+    self.y_test = y_test
+    self.x_val = x_val
+    self.y_val = y_val
 
 def LoadBVData(sub,session,data_dir,exp):
   #for isub,sub in enumerate(subs):       
