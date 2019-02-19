@@ -372,7 +372,7 @@ def PreProcess(raw, event_id, plot_psd=False, filter_data=True,
     viz.plot_compare_evokeds(evoked_dict,colors=colors,
                             picks=picks,split_legend=True)
 
-  return epochs, evoked_dict
+  return epochs
 
 
 
