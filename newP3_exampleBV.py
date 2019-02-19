@@ -35,12 +35,6 @@ print(epochs)
 epochs = concatenate_epochs(epochs)	
 print(epochs)
 
-#Engineer Features for Model
-feats = FeatureEngineer(epochs,model_type='NN',electrode_median=False,
-						frequency_domain=True)
-#Create Model
-model,_ = CreateModel(feats, units=[16,16])
-#Train with validation, then Test
-TrainTestVal(model,feats)
+
 
 
