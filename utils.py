@@ -296,10 +296,77 @@ def GrattonEmcpRaw(raw):
 
 
 
+def GrattonEmcpEpochs(epochs):
+  '''
+  # compute the ERP in each condition
+  # subtract ERP from each trial
+  # subtract baseline (mean over all epoch)
+  # predict eye channel remainder from eeg remainder
+  # use coefficients to subtract eog from eeg
+
+  TODO:
+  #Gratton 1983, Miller 1988:
+
+  # compute the ERP in each condition
+  # subtract ERP from each trial
+  # subtract baseline (mean over all epoch)
+  # Identify blinks and predict seperate for and not for blinks
+    # ID blinks - rate of change > crit -x +x
+  # correct blinks use coeefficients on original data to subtract eog from eeg
+  # using cleaned data:
+    # predict eye channel remainder from eeg remainder
+    # use coefficients to subtract eog from eeg
+
+  '''
+  
+  #select the correct channels
+  eeg_chans = pick_types(epochs.info, eeg=True, eog=False)
+  eog_chans = pick_types(epochs.info, eeg=False, eog=True)
+
+  data = epochs._data
+
+  #subtract the average over trials from each trial
+  avg = np.mean(epochs._data,axis=0)
+  rem = data-avg
+
+  #separate eog and eeg
+  X = rem[:,eeg_chans,:]
+  Y = rem[:,eog_chans,:]
+
+  #subtract mean over time from every trial/channel
+  X = (X.T - np.mean(X,2).T).T
+  Y = (Y.T - np.mean(Y,2).T).T
+
+  #move electrodes first
+  X = np.moveaxis(X,0,1)
+  Y = np.moveaxis(Y,0,1)
+
+  #make 2d and compute regression
+  X = np.reshape(X,(X.shape[0],np.prod(X.shape[1:])))
+  Y = np.reshape(Y,(Y.shape[0],np.prod(Y.shape[1:])))
+  b = np.linalg.solve(np.dot(Y,Y.T), np.dot(Y,X.T))
+
+  #get original data and electrodes first for matrix math
+  raw_eeg = np.moveaxis(data[:,eeg_chans,:],0,1)
+  raw_eog = np.moveaxis(data[:,eog_chans,:],0,1)
+
+  #subtract weighted eye channels from eeg channels
+  eeg_corrected = (raw_eeg.T - np.dot(raw_eog.T,b)).T
+
+  #move back to match epochs
+  eeg_corrected = np.moveaxis(eeg_corrected,0,1)
+
+  #copy original epochs and replace with corrected data
+  epochs_new = epochs.copy()
+  epochs_new._data[:,eeg_chans,:] = eeg_corrected
+
+  return epochs_new
+
+
 def PreProcess(raw, event_id, plot_psd=False, filter_data=True,
                eeg_filter_highpass=1, plot_events=False, epoch_time=(-.2,1),
                baseline=(-.2,0), rej_thresh_uV=200, rereference=False, 
-               emcp=False, epoch_decim=1, plot_electrodes=False,
+               emcp_raw=False, emcp_epochs=False, epoch_decim=1, plot_electrodes=False,
                plot_erp=False):
 
 
@@ -332,8 +399,8 @@ def PreProcess(raw, event_id, plot_psd=False, filter_data=True,
     raw.plot_psd(fmin=eeg_filter_highpass, fmax=nsfreq/2 )
 
   #Eye Correction
-  if emcp:
-    print('Eye Movement Correction')
+  if emcp_raw:
+    print('Raw Eye Movement Correction')
     raw = GrattonEmcpRaw(raw)
 
   #Epoching
@@ -353,6 +420,10 @@ def PreProcess(raw, event_id, plot_psd=False, filter_data=True,
                   preload=True,reject={'eeg':rej_thresh},
                   verbose=False, decim=epoch_decim)
   print('Remaining Trials: ' + str(len(epochs)))
+
+  if emcp_epochs:
+    print('Epochs Eye Movement Correct')
+    epochs = GrattonEmcpEpochs(epochs)
 
   evoked_dict = {event_names[0]:epochs[event_names[0]].average(),
                               event_names[1]:epochs[event_names[1]].average()}
