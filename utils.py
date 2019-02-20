@@ -295,34 +295,22 @@ def GrattonEmcpRaw(raw):
   return raw_new
 
 
-
 def GrattonEmcpEpochs(epochs):
   '''
-  # compute the ERP in each condition
-  # subtract ERP from each trial
-  # subtract baseline (mean over all epoch)
-  # predict eye channel remainder from eeg remainder
-  # use coefficients to subtract eog from eeg
-
-  TODO:
-  #Gratton 1983, Miller 1988:
-
-  # compute the ERP in each condition
-  # subtract ERP from each trial
-  # subtract baseline (mean over all epoch)
-  # Identify blinks and predict seperate for and not for blinks
-    # ID blinks - rate of change > crit -x +x
-  # correct blinks use coeefficients on original data to subtract eog from eeg
-  # using cleaned data:
-    # predict eye channel remainder from eeg remainder
-    # use coefficients to subtract eog from eeg
-
+  # Correct EEG data for EOG artifacts with regression
+  # INPUT - MNE epochs object (with eeg and eog channels)
+  # OUTPUT - MNE epochs object (with eeg corrected)
+  # After: Gratton,Coles,Donchin, 1983
+  # -compute the ERP in each condition
+  # -subtract ERP from each trial
+  # -subtract baseline (mean over all epoch)
+  # -predict eye channel remainder from eeg remainder
+  # -use coefficients to subtract eog from eeg
   '''
-  
-  #select the correct channels
+
+  #select the correct channels and data
   eeg_chans = pick_types(epochs.info, eeg=True, eog=False)
   eog_chans = pick_types(epochs.info, eeg=False, eog=True)
-
   data = epochs._data
 
   #subtract the average over trials from each trial
