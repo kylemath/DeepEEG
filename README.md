@@ -101,6 +101,7 @@ python -m unittest tests
 * Regression Eye movement correction (if eye channels)
   - EOG Regression example: https://cbrnr.github.io/2017/10/20/removing-eog-regression/
   - Original emcp paper: https://apps.dtic.mil/dtic/tr/fulltext/u2/a125699.pdf
+  - Generalized emcp paper: http://www.kylemathewson.com/wp-content/uploads/2010/03/MillerGrattonYee-1988-GeneralizeOcularRemoval.pdf
 * Epoch segmentation (time limits, baseline correction)
 * Artifact rejection
 
