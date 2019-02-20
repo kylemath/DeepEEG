@@ -102,6 +102,8 @@ python -m unittest tests
   - EOG Regression example: https://cbrnr.github.io/2017/10/20/removing-eog-regression/
   - Original emcp paper: https://apps.dtic.mil/dtic/tr/fulltext/u2/a125699.pdf
   - Generalized emcp paper: http://www.kylemathewson.com/wp-content/uploads/2010/03/MillerGrattonYee-1988-GeneralizeOcularRemoval.pdf
+  - 1988 Fortran, Gehring C code: http://gehringlab.org/emcp2001.zip
+  - Matlab implementation: https://github.com/kylemath/MathewsonMatlabTools/blob/master/EEG_analysis/gratton_emcp.m
 * Epoch segmentation (time limits, baseline correction)
 * Artifact rejection
 
