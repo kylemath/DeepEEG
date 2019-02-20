@@ -7,8 +7,8 @@
 from utils import *
 data_dir = '/Users/kylemathewson/Desktop/data/'
 exp = 'P3'
-#subs = ['001','002','004','005','006','007','008','010']
-subs = [ '002']
+subs = ['001','002','004','005','006','007','008','010']
+#subs = [ '002']
 
 sessions = ['ActiveDry','ActiveWet','PassiveWet']
 
@@ -23,9 +23,9 @@ for sub in subs:
 		raw = LoadBVData(sub,session,data_dir,exp)
 		#Pre-Process EEG Data
 		temp_epochs = PreProcess(raw,event_id,
-							emcp=True, rereference=True,
-							plot_erp=False, rej_thresh_uV=250, 
-							epoch_time=(-1,2), baseline=(-1,-.5) )
+							emcp_epochs=True, rereference=True,
+							plot_erp=False, rej_thresh_uV=1000, 
+							epoch_time=(-.2,1), baseline=(-.2,0) )
 		if len(temp_epochs) > 0:
 			epochs.append(temp_epochs)
 		else:
@@ -38,7 +38,7 @@ print(epochs)
 
 #Engineer Features for Model
 feats = FeatureEngineer(epochs,model_type='NN',electrode_median=False,
-						frequency_domain=True)
+						frequency_domain=False)
 #Create Model
 model,_ = CreateModel(feats, units=[16,16])
 #Train with validation, then Test
