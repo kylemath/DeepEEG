@@ -7,7 +7,7 @@ MNE/Keras/Tensorflow library for classification of EEG data
 
 ![DeepEEG Image](DeepEEGImage2.png)
 
-DeepEEG is a Keras/Tensorflow deep learning library that processes EEG trials or raw files from the MNE toolbox as input and predicts binary trial category as output (could scale to multiclass?). This is all made to run on Google Colab notebooks using cloud GPU capabilities, so the git repo's get loaded at the start of the code into the workspace. Minor modifications may be needed to use local Jupyter notebook. Long term goal of command line interface and MNE toolbox plugin.
+DeepEEG is a Keras/Tensorflow deep learning library that processes EEG trials or raw files from the MNE toolbox as input and predicts binary trial category as output (could scale to multiclass?). 
 
 Colab Notebook Example:
 https://colab.research.google.com/github/kylemath/DeepEEG/blob/master/notebooks/DeepEEG.ipynb
