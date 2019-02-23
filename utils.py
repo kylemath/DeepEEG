@@ -308,18 +308,31 @@ def GrattonEmcpEpochs(epochs):
   # -use coefficients to subtract eog from eeg
   '''
 
+  event_names = ['A_error','B_error']
+  i = 0
+  for key, value in sorted(epochs.event_id.items(), key=lambda x: (x[1], x[0])):
+    event_names[i] = key
+    i += 1
+
   #select the correct channels and data
   eeg_chans = pick_types(epochs.info, eeg=True, eog=False)
   eog_chans = pick_types(epochs.info, eeg=False, eog=True)
-  data = epochs._data
+  original_data = epochs._data
 
   #subtract the average over trials from each trial
-  avg = np.mean(epochs._data,axis=0)
-  rem = data-avg
+  rem = {}
+  for event in event_names:
+    data = epochs[event]._data
+    avg = np.mean(epochs[event]._data,axis=0)
+    rem[event] = data-avg
+
+  #concatenate trials together of different types
+  ## then put them all back together in X (regression on all at once)
+  allrem = np.concatenate([rem[event] for event in event_names])
 
   #separate eog and eeg
-  X = rem[:,eeg_chans,:]
-  Y = rem[:,eog_chans,:]
+  X = allrem[:,eeg_chans,:]
+  Y = allrem[:,eog_chans,:]
 
   #subtract mean over time from every trial/channel
   X = (X.T - np.mean(X,2).T).T
@@ -335,8 +348,8 @@ def GrattonEmcpEpochs(epochs):
   b = np.linalg.solve(np.dot(Y,Y.T), np.dot(Y,X.T))
 
   #get original data and electrodes first for matrix math
-  raw_eeg = np.moveaxis(data[:,eeg_chans,:],0,1)
-  raw_eog = np.moveaxis(data[:,eog_chans,:],0,1)
+  raw_eeg = np.moveaxis(original_data[:,eeg_chans,:],0,1)
+  raw_eog = np.moveaxis(original_data[:,eog_chans,:],0,1)
 
   #subtract weighted eye channels from eeg channels
   eeg_corrected = (raw_eeg.T - np.dot(raw_eog.T,b)).T
