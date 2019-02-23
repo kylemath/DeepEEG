@@ -7,7 +7,7 @@ MNE/Keras/Tensorflow library for classification of EEG data
 
 ![DeepEEG Image](DeepEEGImage2.png)
 
-DeepEEG is a Keras/Tensorflow deep learning library that processes EEG trials or raw files from the MNE toolbox as input and predicts binary trial category as output (could scale to multiclass?). This is all made to run on Google Colab notebooks using cloud GPU capabilities, so the git repo's get loaded at the start of the code into the workspace. Minor modifications may be needed to use local Jupyter notebook. Long term goal of command line interface and MNE toolbox plugin.
+DeepEEG is a Keras/Tensorflow deep learning library that processes EEG trials or raw files from the MNE toolbox as input and predicts binary trial category as output (could scale to multiclass?). 
 
 Colab Notebook Example:
 https://colab.research.google.com/github/kylemath/DeepEEG/blob/master/notebooks/DeepEEG.ipynb
@@ -102,6 +102,8 @@ python -m unittest tests
   - EOG Regression example: https://cbrnr.github.io/2017/10/20/removing-eog-regression/
   - Original emcp paper: https://apps.dtic.mil/dtic/tr/fulltext/u2/a125699.pdf
   - Generalized emcp paper: http://www.kylemathewson.com/wp-content/uploads/2010/03/MillerGrattonYee-1988-GeneralizeOcularRemoval.pdf
+  - 1988 Fortran, Gehring C code: http://gehringlab.org/emcp2001.zip
+  - Matlab implementation: https://github.com/kylemath/MathewsonMatlabTools/blob/master/EEG_analysis/gratton_emcp.m
 * Epoch segmentation (time limits, baseline correction)
 * Artifact rejection
 
