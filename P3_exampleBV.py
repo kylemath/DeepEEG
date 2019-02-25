@@ -23,9 +23,10 @@ for sub in subs:
 		raw = LoadBVData(sub,session,data_dir,exp)
 		#Pre-Process EEG Data
 		temp_epochs = PreProcess(raw,event_id,
-							emcp_epochs=False, rereference=True,
+							emcp_epochs=True, rereference=True,
 							plot_erp=False, rej_thresh_uV=1000, 
-							epoch_time=(-.2,1), baseline=(-.2,0) )
+							epoch_time=(-.2,1), baseline=(-.2,0), 
+							epoch_decim=10 )
 		if len(temp_epochs) > 0:
 			epochs.append(temp_epochs)
 		else:
@@ -38,7 +39,7 @@ epochs = concatenate_epochs(epochs)
 feats = FeatureEngineer(epochs,model_type='NN',electrode_median=False,
  						frequency_domain=False)
 #Create Model
-model,_ = CreateModel(feats, units=[16,16])
+model,_ = CreateModel(feats, units=[64,32,16,8])
 #Train with validation, then Test
 TrainTestVal(model,feats)
 
