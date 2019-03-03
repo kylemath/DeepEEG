@@ -64,19 +64,6 @@ def LoadBVData(sub,session,data_dir,exp):
           plot_raw_psd=False,stim_channel=True)
   return raw
 
-def LoadMuseData(subs, nsesh, data_dir, load_verbose=False, sfreq=256.):
-  nsubs = len(subs)
-  raw = []
-  print('Loading Data')
-  for isub,sub in enumerate(subs):
-    print('Subject number ' + str(isub+1) + '/' + str(nsubs))
-    for isesh in range(nsesh):
-      print(' Session number ' + str(isesh+1) + '/' + str(nsesh))
-      raw.append(muse_load_data(data_dir, sfreq=sfreq ,subject_nb=sub,
-                    session_nb=isesh+1,verbose=load_verbose))
-  raw = concatenate_raws(raw)
-  return raw
-
 def loadBV(filename, plot_sensors=True, plot_raw=True,
   plot_raw_psd=True, stim_channel=False, ):
   """Load in recorder data files."""
@@ -106,6 +93,65 @@ def loadBV(filename, plot_sensors=True, plot_raw=True,
     raw.plot_psd(fmin=.1, fmax=100 )
 
   return raw, sfreq
+
+
+def LoadMuseData(subs, nsesh, data_dir, load_verbose=False, sfreq=256.):
+  nsubs = len(subs)
+  raw = []
+  print('Loading Data')
+  for isub,sub in enumerate(subs):
+    print('Subject number ' + str(isub+1) + '/' + str(nsubs))
+    for isesh in range(nsesh):
+      print(' Session number ' + str(isesh+1) + '/' + str(nsesh))
+      raw.append(muse_load_data(data_dir, sfreq=sfreq ,subject_nb=sub,
+                    session_nb=isesh+1,verbose=load_verbose))
+  raw = concatenate_raws(raw)
+  return raw
+
+
+#from eeg-notebooks load_data
+def muse_load_data(data_dir, subject_nb=1, session_nb=1, sfreq=256.,
+                   ch_ind=[0, 1, 2, 3], stim_ind=5, replace_ch_names=None,
+                   verbose=1):
+    """Load CSV files from the /data directory into a Raw object.
+
+    Args:
+        data_dir (str): directory inside /data that contains the
+            CSV files to load, e.g., 'auditory/P300'
+
+    Keyword Args:
+        subject_nb (int or str): subject number. If 'all', load all
+            subjects.
+        session_nb (int or str): session number. If 'all', load all
+            sessions.
+        sfreq (float): EEG sampling frequency
+        ch_ind (list): indices of the EEG channels to keep
+        stim_ind (int): index of the stim channel
+        replace_ch_names (dict or None): dictionary containing a mapping to
+            rename channels. Useful when an external electrode was used.
+
+    Returns:
+        (mne.io.array.array.RawArray): loaded EEG
+    """
+
+
+    if subject_nb == 'all':
+        subject_nb = '*'
+    if session_nb == 'all':
+        session_nb = '*'
+
+    data_path = os.path.join(
+            'eeg-notebooks/data', data_dir,
+            'subject{}/session{}/*.csv'.format(subject_nb, session_nb))
+    fnames = glob(data_path)
+
+    return load_muse_csv_as_raw(fnames,
+                                sfreq=sfreq,
+                                ch_ind=ch_ind,
+                                stim_ind=stim_ind,
+                                replace_ch_names=replace_ch_names,
+                                verbose=verbose)
+
 
 #from eeg-notebooks
 def load_muse_csv_as_raw(filename, sfreq=256., ch_ind=[0, 1, 2, 3],
@@ -160,52 +206,13 @@ def load_muse_csv_as_raw(filename, sfreq=256., ch_ind=[0, 1, 2, 3],
         raw.append(RawArray(data=data, info=info, verbose=verbose))
 
     # concatenate all raw objects
-    raws = concatenate_raws(raw, verbose=verbose)
-
+    if len(raw) > 0:
+      raws = concatenate_raws(raw, verbose=verbose)
+    else:
+      print('No files for subject with filename ' + str(filename))
+      raws = raw
+      
     return raws
-
-#from eeg-notebooks load_data
-def muse_load_data(data_dir, subject_nb=1, session_nb=1, sfreq=256.,
-                   ch_ind=[0, 1, 2, 3], stim_ind=5, replace_ch_names=None,
-                   verbose=1):
-    """Load CSV files from the /data directory into a Raw object.
-
-    Args:
-        data_dir (str): directory inside /data that contains the
-            CSV files to load, e.g., 'auditory/P300'
-
-    Keyword Args:
-        subject_nb (int or str): subject number. If 'all', load all
-            subjects.
-        session_nb (int or str): session number. If 'all', load all
-            sessions.
-        sfreq (float): EEG sampling frequency
-        ch_ind (list): indices of the EEG channels to keep
-        stim_ind (int): index of the stim channel
-        replace_ch_names (dict or None): dictionary containing a mapping to
-            rename channels. Useful when an external electrode was used.
-
-    Returns:
-        (mne.io.array.array.RawArray): loaded EEG
-    """
-
-
-    if subject_nb == 'all':
-        subject_nb = '*'
-    if session_nb == 'all':
-        session_nb = '*'
-
-    data_path = os.path.join(
-            'eeg-notebooks/data', data_dir,
-            'subject{}/session{}/*.csv'.format(subject_nb, session_nb))
-    fnames = glob(data_path)
-
-    return load_muse_csv_as_raw(fnames,
-                                sfreq=sfreq,
-                                ch_ind=ch_ind,
-                                stim_ind=stim_ind,
-                                replace_ch_names=replace_ch_names,
-                                verbose=verbose)
 
 
 def SimulateRaw(amp1 = 50, amp2 = 100, freq = 1., batch=1):
