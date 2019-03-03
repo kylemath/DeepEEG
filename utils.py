@@ -365,7 +365,7 @@ def GrattonEmcpEpochs(epochs):
 
 
 def PreProcess(raw, event_id, plot_psd=False, filter_data=True,
-               eeg_filter_highpass=1, plot_events=False, epoch_time=(-.2,1),
+               filter_range=(1,30), plot_events=False, epoch_time=(-.2,1),
                baseline=(-.2,0), rej_thresh_uV=200, rereference=False, 
                emcp_raw=False, emcp_epochs=False, epoch_decim=1, plot_electrodes=False,
                plot_erp=False):
@@ -377,7 +377,8 @@ def PreProcess(raw, event_id, plot_psd=False, filter_data=True,
   nsfreq = sfreq/epoch_decim
   tmin=epoch_time[0]
   tmax=epoch_time[1]
-  eeg_filter_lowpass = nsfreq/2.5  #lower to avoid aliasing from decim
+  if filter_range[1] > nsfreq:
+    filter_range[1] = nsfreq/2.5  #lower than 2 to avoid aliasing from decim??
 
   #pull event names in order of trigger number
   event_names = ['A_error','B_error']
@@ -392,12 +393,13 @@ def PreProcess(raw, event_id, plot_psd=False, filter_data=True,
     raw = mastoidReref(raw)
 
   if filter_data:
-    print('Filtering Data')
-    raw.filter(eeg_filter_highpass,eeg_filter_lowpass,
+    print('Filtering Data Between ' + str(filter_range[0]) + 
+            ' and ' + str(filter_range[1]) + ' Hz.')
+    raw.filter(filter_range[0],filter_range[1],
                method='iir', verbose='WARNING' )
 
   if plot_psd:
-    raw.plot_psd(fmin=eeg_filter_highpass, fmax=nsfreq/2 )
+    raw.plot_psd(fmin=filter_range[0], fmax=nsfreq/2 )
 
   #Eye Correction
   if emcp_raw:
@@ -454,7 +456,6 @@ def FeatureEngineer(epochs, model_type='NN',
                     wavelet_decim=1,flims=(3,30),
                     f_bins=20,wave_cycles=3,
                     spect_baseline=[-1,-.5],
-                    electrodes_out=[11,12,13,14,15],
                     test_split = 0.2, val_split = 0.2,
                     random_seed=1017, watermark = False):
 
@@ -484,13 +485,14 @@ def FeatureEngineer(epochs, model_type='NN',
     f_low = flims[0]
     f_high = flims[1]
     frequencies =  np.linspace(f_low, f_high, f_bins, endpoint=True)
+    eeg_chans = pick_types(epochs.info,eeg=True,eog=False)
 
     ####
     ## Condition0 ##
     print('Computing Morlet Wavelets on ' + event_names[0])
     tfr0 = tfr_morlet(epochs[event_names[0]], freqs=frequencies,
                           n_cycles=wave_cycles, return_itc=False,
-                          picks=electrodes_out, average=False,
+                          picks=eeg_chans, average=False,
                           decim=wavelet_decim)
     tfr0 = tfr0.apply_baseline(spect_baseline,mode='mean')
     #reshape data
@@ -508,7 +510,7 @@ def FeatureEngineer(epochs, model_type='NN',
     print('Computing Morlet Wavelets on ' + event_names[1])
     tfr1 = tfr_morlet(epochs[event_names[1]], freqs=frequencies,
                           n_cycles=wave_cycles, return_itc=False,
-                          picks=electrodes_out, average=False,
+                          picks=eeg_chans, average=False,
                           decim=wavelet_decim)
     tfr1 = tfr1.apply_baseline(spect_baseline,mode='mean')
     #reshape data

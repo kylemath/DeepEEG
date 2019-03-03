@@ -8,7 +8,7 @@ from utils import *
 data_dir = '/Users/kylemathewson/Desktop/data/'
 exp = 'P3'
 subs = ['001','002','004','005','006','007','008','010']
-#subs = [ '002']
+subs = [ '008']
 
 sessions = ['ActiveDry','ActiveWet','PassiveWet']
 
@@ -25,8 +25,8 @@ for sub in subs:
 		temp_epochs = PreProcess(raw,event_id,
 							emcp_epochs=True, rereference=True,
 							plot_erp=False, rej_thresh_uV=1000, 
-							epoch_time=(-.2,1), baseline=(-.2,0), 
-							epoch_decim=10 )
+							epoch_time=(-1,2), baseline=(-.2,0), 
+							epoch_decim=1,filter_range=(1,20))
 		if len(temp_epochs) > 0:
 			epochs.append(temp_epochs)
 		else:
@@ -36,10 +36,11 @@ for sub in subs:
 epochs = concatenate_epochs(epochs)	
 
 #Engineer Features for Model
-feats = FeatureEngineer(epochs,model_type='NN',electrode_median=False,
- 						frequency_domain=False)
+feats = FeatureEngineer(epochs,model_type='CNN',electrode_median=False,
+ 						normalization=False, frequency_domain=True, 
+ 						wavelet_decim=10)
 #Create Model
-model,_ = CreateModel(feats, units=[64,32,16,8])
+model,_ = CreateModel(feats, units=[256,256,256,256])
 #Train with validation, then Test
 TrainTestVal(model,feats)
 
