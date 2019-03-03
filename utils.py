@@ -377,8 +377,6 @@ def PreProcess(raw, event_id, plot_psd=False, filter_data=True,
                emcp_raw=False, emcp_epochs=False, epoch_decim=1, plot_electrodes=False,
                plot_erp=False):
 
-
-
   sfreq = raw.info['sfreq']
   #create new output freq for after epoch or wavelet decim
   nsfreq = sfreq/epoch_decim
@@ -459,9 +457,10 @@ def PreProcess(raw, event_id, plot_psd=False, filter_data=True,
 
 def FeatureEngineer(epochs, model_type='NN',
                     frequency_domain=False,
-                    normalization=True, electrode_median=False,
-                    wavelet_decim=1,flims=(3,30),
-                    f_bins=20,wave_cycles=3,
+                    normalization=False, electrode_median=False,
+                    wavelet_decim=1, flims=(3,30), include_phase=False,
+                    f_bins=20, wave_cycles=3, 
+                    wavelet_electrodes = [11,12,13,14,15],
                     spect_baseline=[-1,-.5],
                     test_split = 0.2, val_split = 0.2,
                     random_seed=1017, watermark = False):
@@ -492,51 +491,50 @@ def FeatureEngineer(epochs, model_type='NN',
     f_low = flims[0]
     f_high = flims[1]
     frequencies =  np.linspace(f_low, f_high, f_bins, endpoint=True)
-    eeg_chans = pick_types(epochs.info,eeg=True,eog=False)
 
-    ####
-    ## Condition0 ##
-    print('Computing Morlet Wavelets on ' + event_names[0])
-    tfr0 = tfr_morlet(epochs[event_names[0]], freqs=frequencies,
-                          n_cycles=wave_cycles, return_itc=False,
-                          picks=eeg_chans, average=False,
-                          decim=wavelet_decim)
-    tfr0 = tfr0.apply_baseline(spect_baseline,mode='mean')
-    #reshape data
-    stim_onset = np.argmax(tfr0.times>0)
-    feats.new_times = tfr0.times[stim_onset:]
+    if wavelet_electrodes == 'all':
+      wavelet_electrodes = pick_types(epochs.info,eeg=True,eog=False)
 
-    #move electrodes last
-    cond0_power_out = np.moveaxis(tfr0.data[:,:,:,stim_onset:],1,3)
-    # move time second
-    cond0_power_out = np.moveaxis(cond0_power_out,1,2)
-    ####
+    #type of output from wavelet analysis
+    if include_phase:
+      tfr_output_type = 'complex'
+    else:
+      tfr_output_type = 'power'
 
-    ####
-    ## Condition1 ##
-    print('Computing Morlet Wavelets on ' + event_names[1])
-    tfr1 = tfr_morlet(epochs[event_names[1]], freqs=frequencies,
-                          n_cycles=wave_cycles, return_itc=False,
-                          picks=eeg_chans, average=False,
-                          decim=wavelet_decim)
-    tfr1 = tfr1.apply_baseline(spect_baseline,mode='mean')
-    #reshape data
-    cond1_power_out = np.moveaxis(tfr1.data[:,:,:,stim_onset:],1,3)
-    cond1_power_out = np.moveaxis(cond1_power_out,1,2) # move time second
-    ####
+    tfr_dict = {}
+    for event in event_names:
+      print('Computing Morlet Wavelets on ' + event)
+      tfr_temp = tfr_morlet(epochs[event], freqs=frequencies,
+                            n_cycles=wave_cycles, return_itc=False,
+                            picks=wavelet_electrodes, average=False,
+                            decim=wavelet_decim, output=tfr_output_type)
+      tfr_temp = tfr_temp.apply_baseline(spect_baseline,mode='mean')
+      stim_onset = np.argmax(tfr_temp.times>0)
+      power_out_temp = np.moveaxis(tfr_temp.data[:,:,:,stim_onset:],1,3)
+      power_out_temp = np.moveaxis(power_out_temp,1,2)
+      print(event + ' trials: ' + str(len(power_out_temp)))
+      tfr_dict[event] = power_out_temp
 
-    print('Condition one trials: ' + str(len(cond1_power_out)))
-    print(event_names[1] + ' Time Points: ' + str(len(feats.new_times)))
-    print(event_names[1] + ' Frequencies: ' + str(len(tfr1.freqs)))
-    print('Condition zero trials: ' + str(len(cond0_power_out)))
-    print(event_names[0] + ' Time Points: ' + str(len(feats.new_times)))
-    print(event_names[0] + ' Frequencies: ' + str(len(tfr0.freqs)))
+    #reshape data (sloppy but just use the last temp tfr)
+    feats.new_times = tfr_temp.times[stim_onset:]
 
+    for event in event_names:
+      print(event + ' Time Points: ' + str(len(feats.new_times)))
+      print(event + ' Frequencies: ' + str(len(tfr_temp.freqs)))
 
     #Construct X and Y
-    X = np.append(cond0_power_out,cond1_power_out,0);
-    Y_class = np.append(np.zeros(len(cond0_power_out)),
-                        np.ones(len(cond1_power_out)),0)
+    for ievent,event in enumerate(event_names):
+      if ievent == 0:
+        X = tfr_dict[event]
+        Y_class = np.zeros(len(tfr_dict[event]))
+      else:
+        X = np.append(X,tfr_dict[event],0)
+        Y_class = np.append(Y_class,np.ones(len(tfr_dict[event]))*ievent,0)
+
+    #concatenate real and imaginary data
+    if include_phase:
+      print('Concatenating the real and imaginary components')
+      X = np.append(np.real(X),np.imag(X),2)
 
     if electrode_median:
       print('Computing Median over electrodes')
