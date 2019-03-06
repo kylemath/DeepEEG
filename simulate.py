@@ -13,7 +13,7 @@ raw,event_id = SimulateRaw(amp1=100, amp2=50, freq=2., batch=1)
 epochs = PreProcess(raw,event_id,filter_data=False,plot_erp=False,
 					epoch_time=(-1,2))
 
-pick = 33
+pick = 35
 for event in event_id.keys():
 	fig = plt.imshow(epochs[event]._data[:,pick,:])
 	plt.show()
