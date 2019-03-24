@@ -26,11 +26,11 @@ print(epochs)
 #create evoked dict by averaging all the epochs for this test subject
 evoked_dict = {}
 for session in sessions: 
-	evoked_dict[session '/' 'Target'] = epochs[session]['Target'].average()
-	evoked_dict[session '/' 'Standard'] = epochs[session]['Standard'].average()
+	evoked_dict[session + '/' + 'Target'] = epochs[session]['Target'].average()
+	evoked_dict[session + '/' + 'Standard'] = epochs[session]['Standard'].average()
 
 #plot all the erps on one plot
-viz.plot_compare_evokeds(evoked_dict,picks=[6])
+viz.plot_compare_evokeds(evoked_dict['Target'],picks=[6])
 
 
 
