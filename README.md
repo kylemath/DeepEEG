@@ -16,7 +16,7 @@ Colab Notebook Example with data from Brain Vision Recorder in google drive:
 https://colab.research.google.com/github/kylemath/DeepEEG/blob/master/notebooks/Deep_EEG_BV.ipynb
 
 Colab Notebook Example with muse data from [NeurotechX](https://github.com/neurotechx) eeg-notebooks:
-https://colab.research.google.com/github/kylemath/DeepEEG/blob/master/notebooks/DeepEEG_Muse.ipynb
+https://colab.research.google.com/github/kylemath/DeepEEG/blob/master/notebooks/Deep_EEG_Muse.ipynb
 
 ## Getting Started Locally:
 
