@@ -1,0 +1,50 @@
+DeepEEG summary - CAN 2019 - Toronto
+----
+
+Python 
+
+based on MNE raw and epochs objects
+
+Loads 
+
+	-Muse from eeg-notebooks, -Collab Example
+		-Various example data included 
+
+	- simulated from MNE, - Collab Example
+		-simulated from real data
+		-time or frequency domain options
+		-change magnitude of effects and difference
+		Change signal to noise
+		-eye blinks
+
+	- raw or epoched data from BV and other amplifiers - Collab Example
+		-connect collab to google drive 
+		-run locally on machine by downloading repo
+
+
+New Class created out of epochs object - feats
+
+epochs are created with various classic ERP methods custom
+	-Gratton eye movement correction  
+	-mastoid rereferrence
+
+
+Feats - time or frequency domain
+	-frequency domain - power or power+phase concatenated
+		-baseline or raw spectrograms
+	-time domain - filters, single trial ERP
+
+	-outputs X and Y to train models (data and labels)
+	-automatically shaped for input to model
+
+	-watermark option to test models
+
+
+CreateModel 
+		-Keras/TensorFlow 
+		- high level abstracted, object oriented programming 
+		- NN, CNN, CNN3D, LSTM, Auto, AutoDeep
+
+TrainTestVal
+	-Test and Validation sets left out of training
+	-predicts binary class

@@ -422,27 +422,29 @@ def PreProcess(raw, event_id, plot_psd=False, filter_data=True,
     viz.plot_events(events, sfreq, raw.first_samp, color=color,
                         event_id=event_id)
 
-  #Constructevents
+  #Construct events - Main function from MNE
   epochs = Epochs(raw, events=events, event_id=event_id,
                   tmin=tmin, tmax=tmax, baseline=baseline,
                   preload=True,reject={'eeg':rej_thresh},
                   verbose=False, decim=epoch_decim)
   print('Remaining Trials: ' + str(len(epochs)))
 
+  #Gratton eye movement correction procedure on epochs
   if emcp_epochs:
     print('Epochs Eye Movement Correct')
     epochs = GrattonEmcpEpochs(epochs)
 
+  ## plot ERP at each electrode
   evoked_dict = {event_names[0]:epochs[event_names[0]].average(),
                               event_names[1]:epochs[event_names[1]].average()}
 
-  ## plot ERP at each electrode
+  # butterfly plot
   if plot_electrodes:
     picks = pick_types(evoked_dict[event_names[0]].info, meg=False, eeg=True, eog=False)
     fig_zero = evoked_dict[event_names[0]].plot(spatial_colors=True,picks=picks)
     fig_zero = evoked_dict[event_names[1]].plot(spatial_colors=True,picks=picks)
 
-  ## plot ERP in each condition on same plot
+  # plot ERP in each condition on same plot
   if plot_erp:
     #find the electrode most miximal on the head (highest in z)
     picks = np.argmax([evoked_dict[event_names[0]].info['chs'][i]['loc'][2] 
@@ -466,9 +468,22 @@ def FeatureEngineer(epochs, model_type='NN',
                     random_seed=1017, watermark = False):
 
   """
-  Takes epochs object as input and settings, outputs training, test and val data
-  option to use frequency or time domain
-  take epochs? tfr? or autoencoder encoded object?
+  Takes epochs object as 
+
+  input and settings, 
+  outputs  feats(training, test and val data option to use frequency or time domain)
+  
+  TODO: take tfr? or autoencoder encoded object?
+
+  FeatureEngineer(epochs, model_type='NN',
+                    frequency_domain=False,
+                    normalization=False, electrode_median=False,
+                    wavelet_decim=1, flims=(3,30), include_phase=False,
+                    f_bins=20, wave_cycles=3, 
+                    wavelet_electrodes = [11,12,13,14,15],
+                    spect_baseline=[-1,-.5],
+                    test_split = 0.2, val_split = 0.2,
+                    random_seed=1017, watermark = False):
   """
   np.random.seed(random_seed)
 
@@ -488,10 +503,13 @@ def FeatureEngineer(epochs, model_type='NN',
 
   if frequency_domain:
     print('Constructing Frequency Domain Features')
+
+    #list of frequencies to output
     f_low = flims[0]
     f_high = flims[1]
     frequencies =  np.linspace(f_low, f_high, f_bins, endpoint=True)
 
+    #option to select all electrodes for fft
     if wavelet_electrodes == 'all':
       wavelet_electrodes = pick_types(epochs.info,eeg=True,eog=False)
 
@@ -508,14 +526,18 @@ def FeatureEngineer(epochs, model_type='NN',
                             n_cycles=wave_cycles, return_itc=False,
                             picks=wavelet_electrodes, average=False,
                             decim=wavelet_decim, output=tfr_output_type)
+
+      # Apply spectral baseline and find stim onset time
       tfr_temp = tfr_temp.apply_baseline(spect_baseline,mode='mean')
       stim_onset = np.argmax(tfr_temp.times>0)
+
+      # Reshape power output and save to tfr dict
       power_out_temp = np.moveaxis(tfr_temp.data[:,:,:,stim_onset:],1,3)
       power_out_temp = np.moveaxis(power_out_temp,1,2)
       print(event + ' trials: ' + str(len(power_out_temp)))
       tfr_dict[event] = power_out_temp
 
-    #reshape data (sloppy but just use the last temp tfr)
+    #reshape times (sloppy but just use the last temp tfr)
     feats.new_times = tfr_temp.times[stim_onset:]
 
     for event in event_names:
@@ -536,11 +558,12 @@ def FeatureEngineer(epochs, model_type='NN',
       print('Concatenating the real and imaginary components')
       X = np.append(np.real(X),np.imag(X),2)
 
+    #compute median over electrodes to decrease features
     if electrode_median:
       print('Computing Median over electrodes')
       X = np.expand_dims(np.median(X,axis=len(X.shape)-1),2)
 
-    #reshape to trials x times x variables for LSTM and NN model
+    #reshape for various models
     if model_type == 'NN' or model_type == 'LSTM':
       X = np.reshape(X, (X.shape[0], X.shape[1], np.prod(X.shape[2:])))
 
@@ -557,6 +580,7 @@ def FeatureEngineer(epochs, model_type='NN',
 
     #if using muse aux port as eeg must label it as such
     eeg_chans = pick_types(epochs.info,eeg=True,eog=False)
+
     #put channels last, remove eye and stim
     X = np.moveaxis(epochs._data[:,eeg_chans,:],1,2);
 
@@ -570,6 +594,7 @@ def FeatureEngineer(epochs, model_type='NN',
     #This probably is not robust to other marker numbers
     Y_class = epochs.events[:,2]-1  #subtract 1 to make 0 and 1
 
+    #median over electrodes to reduce features
     if electrode_median:
       print('Computing Median over electrodes')
       X = np.expand_dims(np.median(X,axis=len(X.shape)-1),2)
@@ -594,7 +619,7 @@ def FeatureEngineer(epochs, model_type='NN',
       print('Size X after reshape for Auto: ' + str(X.shape))
 
 
-  #Normalize X - need to save mean and std for future test + val
+  #Normalize X - TODO: need to save mean and std for future test + val
   if normalization:
     print('Normalizing X')
     X = (X - np.mean(X)) / np.std(X)
