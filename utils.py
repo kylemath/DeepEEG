@@ -862,7 +862,9 @@ def CreateModel(feats,units=[16,8,4,8,16], dropout=.25,
   return model, encoder
 
 
-def TrainTestVal(model, feats, batch_size=2, train_epochs=20, show_plots=True):
+def TrainTestVal(model, feats, batch_size=2, 
+                train_epochs=20, show_plots=True):
+
   print('Training Model:')
   # Train Model
   if feats.model_type == 'AUTO' or feats.model_type == 'AUTODeep':
