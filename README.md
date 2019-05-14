@@ -42,6 +42,7 @@ git clone https://github.com/kylemath/eeg-notebooks
 
 You are now ready to run DeepEEG.
 
+For example, type ```python``` and use the following:
 This loads in some example data from eeg-notebooks
 
 ```python
