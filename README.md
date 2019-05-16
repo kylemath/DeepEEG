@@ -24,12 +24,13 @@ DeepEEG is tested on macOS 10.14 with Python3.
 Prepare your environment the first time:
 
 ```sh
-# using conda
-conda create -n deepeeg python=3
-source activate deepeeg
 # using virtualenv
-# python3 -m venv deepeeg
-# source deepeeg/bin/activate
+ python3 -m venv deepeeg
+ source deepeeg/bin/activate
+# using conda
+#conda create -n deepeeg python=3
+#source activate deepeeg
+
 ```
 
 ```sh
