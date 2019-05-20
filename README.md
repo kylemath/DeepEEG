@@ -11,6 +11,8 @@ DeepEEG is a Keras/Tensorflow deep learning library that processes EEG trials or
 
 CAN 2019 Poster presentation on DeepEEG - https://docs.google.com/presentation/d/1hO9wKwBVvfXDtUCz7kVRc0A6BsSwX-oVBsDMgrFwLlg/edit?usp=sharing
 
+## Collab notebooks for cloud compution
+
 Colab Notebook Example with simulated data:
 https://colab.research.google.com/github/kylemath/DeepEEG/blob/master/notebooks/DeepEEG_Sim.ipynb
 
