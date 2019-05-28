@@ -41,8 +41,8 @@ from sklearn.model_selection import train_test_split
 
 
 class Feats:
-  def __init__(self, num_classes=2, class_weights=[1,1], input_shape=[16,], 
-               new_times=1, model_type='1', 
+  def __init__(self, num_classes=2, class_weights=[1,1], input_shape=[16,],
+               new_times=1, model_type='1',
                x_train=1, y_train=1, x_test=1, y_test=1, x_val=1, y_val=1):
     self.num_classes = num_classes
     self.class_weights = class_weights
@@ -57,7 +57,7 @@ class Feats:
     self.y_val = y_val
 
 def LoadBVData(sub,session,data_dir,exp):
-  #for isub,sub in enumerate(subs):       
+  #for isub,sub in enumerate(subs):
   print('Loading data for subject number: ' + sub)
   fname = data_dir + exp + '/' + sub + '_' + exp + '_' + session + '.vhdr'
   raw,sfreq = loadBV(fname,plot_sensors=False,plot_raw=False,
@@ -211,21 +211,21 @@ def load_muse_csv_as_raw(filename, sfreq=256., ch_ind=[0, 1, 2, 3],
     else:
       print('No files for subject with filename ' + str(filename))
       raws = raw
-      
+
     return raws
 
 
 def SimulateRaw(amp1 = 50, amp2 = 100, freq = 1., batch=1):
 
   """Create simulated raw data and events of two kinds
-  
+
   Keyword Args:
       amp1 (float): amplitude of first condition effect
-      amp2 (float): ampltiude of second condition effect, 
+      amp2 (float): ampltiude of second condition effect,
           null hypothesis amp1=amp2
       freq (float): Frequency of simulated signal 1. for ERP 10. for alpha
       batch (int): number of groups of 255 trials in each condition
-  Returns: 
+  Returns:
       raw: simulated EEG MNE raw object with two event types
       event_id: dict of the two events for input to PreProcess()
   """
@@ -235,10 +235,10 @@ def SimulateRaw(amp1 = 50, amp2 = 100, freq = 1., batch=1):
   raw_fname = data_path + '/MEG/sample/sample_audvis_raw.fif'
   trans_fname = data_path + '/MEG/sample/sample_audvis_raw-trans.fif'
   src_fname = data_path + '/subjects/sample/bem/sample-oct-6-src.fif'
-  bem_fname = (data_path + 
+  bem_fname = (data_path +
         '/subjects/sample/bem/sample-5120-5120-5120-bem-sol.fif')
 
-  
+
   raw_single = mne.io.read_raw_fif(raw_fname,preload=True)
   raw_single.set_eeg_reference(projection=True)
   raw_single = raw_single.crop(0., 255.)
@@ -251,7 +251,7 @@ def SimulateRaw(amp1 = 50, amp2 = 100, freq = 1., batch=1):
   raw = concatenate_raws(raw)
 
   epoch_duration = 1.
-  
+
   def data_fun(amp, freq):
     """Create function to create fake signal"""
     def data_fun_inner(times):
@@ -274,9 +274,9 @@ def SimulateRaw(amp1 = 50, amp2 = 100, freq = 1., batch=1):
   stc_one = simulate_sparse_stc(src, n_dipoles=1, times=times,
               data_fun=data_fun(amp2,freq), random_state=0)
 
-  raw_sim_zero = simulate_raw(raw, stc_zero, trans_fname, src, bem_fname, 
+  raw_sim_zero = simulate_raw(raw, stc_zero, trans_fname, src, bem_fname,
             cov='simple', blink=True, n_jobs=1, verbose=True)
-  raw_sim_one = simulate_raw(raw, stc_one, trans_fname, src, bem_fname, 
+  raw_sim_one = simulate_raw(raw, stc_one, trans_fname, src, bem_fname,
             cov='simple', blink=True, n_jobs=1, verbose=True)
 
   stim_pick = raw_sim_one.info['ch_names'].index('STI 014')
@@ -373,7 +373,7 @@ def GrattonEmcpEpochs(epochs):
 
 def PreProcess(raw, event_id, plot_psd=False, filter_data=True,
                filter_range=(1,30), plot_events=False, epoch_time=(-.2,1),
-               baseline=(-.2,0), rej_thresh_uV=200, rereference=False, 
+               baseline=(-.2,0), rej_thresh_uV=200, rereference=False,
                emcp_raw=False, emcp_epochs=False, epoch_decim=1, plot_electrodes=False,
                plot_erp=False):
 
@@ -398,7 +398,7 @@ def PreProcess(raw, event_id, plot_psd=False, filter_data=True,
     raw = mastoidReref(raw)
 
   if filter_data:
-    print('Filtering Data Between ' + str(filter_range[0]) + 
+    print('Filtering Data Between ' + str(filter_range[0]) +
             ' and ' + str(filter_range[1]) + ' Hz.')
     raw.filter(filter_range[0],filter_range[1],
                method='iir', verbose='WARNING' )
@@ -447,7 +447,7 @@ def PreProcess(raw, event_id, plot_psd=False, filter_data=True,
   # plot ERP in each condition on same plot
   if plot_erp:
     #find the electrode most miximal on the head (highest in z)
-    picks = np.argmax([evoked_dict[event_names[0]].info['chs'][i]['loc'][2] 
+    picks = np.argmax([evoked_dict[event_names[0]].info['chs'][i]['loc'][2]
               for i in range(len(evoked_dict[event_names[0]].info['chs']))])
     colors = {event_names[0]:"Red",event_names[1]:"Blue"}
     viz.plot_compare_evokeds(evoked_dict,colors=colors,
@@ -461,25 +461,25 @@ def FeatureEngineer(epochs, model_type='NN',
                     frequency_domain=False,
                     normalization=False, electrode_median=False,
                     wavelet_decim=1, flims=(3,30), include_phase=False,
-                    f_bins=20, wave_cycles=3, 
+                    f_bins=20, wave_cycles=3,
                     wavelet_electrodes = [11,12,13,14,15],
                     spect_baseline=[-1,-.5],
                     test_split = 0.2, val_split = 0.2,
                     random_seed=1017, watermark = False):
 
   """
-  Takes epochs object as 
+  Takes epochs object as
 
-  input and settings, 
+  input and settings,
   outputs  feats(training, test and val data option to use frequency or time domain)
-  
+
   TODO: take tfr? or autoencoder encoded object?
 
   FeatureEngineer(epochs, model_type='NN',
                     frequency_domain=False,
                     normalization=False, electrode_median=False,
                     wavelet_decim=1, flims=(3,30), include_phase=False,
-                    f_bins=20, wave_cycles=3, 
+                    f_bins=20, wave_cycles=3,
                     wavelet_electrodes = [11,12,13,14,15],
                     spect_baseline=[-1,-.5],
                     test_split = 0.2, val_split = 0.2,
@@ -862,7 +862,7 @@ def CreateModel(feats,units=[16,8,4,8,16], dropout=.25,
   return model, encoder
 
 
-def TrainTestVal(model, feats, batch_size=2, 
+def TrainTestVal(model, feats, batch_size=2,
                 train_epochs=20, show_plots=True):
 
   print('Training Model:')
@@ -904,6 +904,7 @@ def TrainTestVal(model, feats, batch_size=2,
 
     # list all data in history
     print(history.history.keys())
+
 
     if show_plots:
       # summarize history for accuracy
