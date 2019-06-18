@@ -21,12 +21,12 @@ def connect(path):
 #creates table for the test data
 def createTable():
     global connection, cursor
-    cursor.execute("CREATE TABLE IF NOT EXISTS tests (test_num INTEGER PRIMARY KEY, accuracy FLOAT NOT NULL, score FLOAT NOT NULL, model TEXT NOT NULL, units TEXT NOT NULL, dropout FLOAT NOT NULL, batch_norm BOOLEAN NOT NULL, filt_size INTEGER NOT NULL, pool_size INTEGER NOT NULL);")
+    cursor.execute("CREATE TABLE IF NOT EXISTS tests (test_num INTEGER PRIMARY KEY, accuracy FLOAT NOT NULL, score FLOAT NOT NULL, model TEXT NOT NULL, layers INTEGER NOT NULL, units TEXT NOT NULL, dropout FLOAT NOT NULL, batch_norm BOOLEAN NOT NULL, filt_size INTEGER NOT NULL, pool_size INTEGER NOT NULL);")
 
 #takes data from the tests and inserts it into the test table
-def insertData(test_num,accuracy,score,model,units,dropout,batch_norm,filt_size,pool_size):
+def insertData(test_num,accuracy,score,model,layers,units,dropout,batch_norm,filt_size,pool_size):
     global connection, cursor
-    cursor.execute("INSERT INTO tests(test_num,accuracy,score,model,units,dropout,batch_norm,filt_size,pool_size) VALUES(:test_num,:accuracy,:score,:model,:units,:dropout,:batch_norm,:filt_size,:pool_size);",{"test_num":test_num,"accuracy":accuracy,"score":score,"model":model,"units":units,"dropout":dropout,"batch_norm":batch_norm,"filt_size":filt_size,"pool_size":pool_size})
+    cursor.execute("INSERT INTO tests(test_num,accuracy,score,model,layers,units,dropout,batch_norm,filt_size,pool_size) VALUES(:test_num,:accuracy,:score,:model,:layers,:units,:dropout,:batch_norm,:filt_size,:pool_size);",{"test_num":test_num,"accuracy":accuracy,"score":score,"model":model,"layers":layers,"units":units,"dropout":dropout,"batch_norm":batch_norm,"filt_size":filt_size,"pool_size":pool_size})
 
 #returns the length of the table
 def table_length():
@@ -35,76 +35,46 @@ def table_length():
     length = cursor.fetchall()
     return int(length[0][0])
 
+def simulate(model_type,units):
+    raw,event_id = SimulateRaw(amp1=100,amp2=50,freq=2.,batch=1)
+    epochs = PreProcess(raw,event_id,filter_data = False, plot_erp = False)
+    feats = FeatureEngineer(epochs,model_type=model_type)
+    model,_ = CreateModel(feats,units=units)
+    _,results = TrainTestVal(model,feats,show_plots = False)
+    accuracy = results["acc"]
+    score = results["score"]
+
+    return accuracy, score
 
 def main():
     path = "testDB.db"
     connect(path)
     createTable()
-
     index = table_length()
-    tests = int(input("How many random tests would you like to simulate?: "))
 
-    for test in range(tests):
-        model_type = random.sample(["NN"],1) #,"CNN","CNN3D","LSTM"],1)
+    dropout = 0.25
+    batch_norm = True
+    filt_size = 3
+    pool_size = 2
+    models = ["NN","CNN","CNN3D","LSTM"]
+
+    tests = input("How many tests do you want to run?: ")
+    for test in tests:
+        layers = random.randint(1,5)
+        model_type = random.sample(models,1)
         model_type = model_type[0]
         units = []
-        length = random.randint(1,5)
 
-        if length%2 == 0:
-            if length//2 == 0:
-                unit = (random.randint(0,6))
-                units.append(2**unit)
-                units.append(2**unit)
-            else:
-                unit = (random.randint(1,6))
-                units.append(2**unit)
-                units.append(2**(unit-1))
-                units.append(2**(unit-1))
-                units.append(2**unit)
+        if layers%2 == 1:
+            units.append(2**(random.randint(1,6)))
 
-        else:
-            if length == 1:
-                unit = (random.randint(0,6))
-                units.append(2**unit)
+        for number in range(layers//2):
+            unit = 2**(random.randint(1,6))
+            units.insert(0,unit)
+            units.append(unit)
 
-            elif length == 3:
-                unit = (random.randint(1,6))
-                units.append(2**unit)
-                units.append(2**(unit-1))
-                units.append(2**unit)
-
-            else:
-                unit = (random.randint(2,6))
-                units.append(2**unit)
-                units.append(2**(unit-1))
-                units.append(2**(unit-2))
-                units.append(2**(unit-1))
-                units.append(2**unit)
-
-        dropout = 0.25
-        batch_norm = 1
-        filt_size = 3
-        pool_size = 2
-
-        raw,event_id = SimulateRaw(amp1=100,amp2=50,freq=2.,batch=1)
-        epochs = PreProcess(raw,event_id,filter_data = False, plot_erp = False)
-
-        pick = 33
-        '''
-        for event in event_id.keys():
-            fig = plt.imshow(epochs[event]._data[:,pick,:])
-            plt.show()
-        '''
-
-        feats = FeatureEngineer(epochs,model_type=model_type)
-        model,_ = CreateModel(feats,units=units,)
-        _,results = TrainTestVal(model,feats,show_plots = False)
-        accuracy = results["acc"]
-        score = results["score"]
-
-        insertData(index,accuracy,score,model_type,str(units),dropout,batch_norm,filt_size,pool_size)
-        index += 1
-
+        accuracy,score = simulate(model_type,units)
+        insertData(index,accuracy,score,model_type,layers,str(units),dropout,batch_norm,filt_size,pool_size)
 
     connection.commit()
     connection.close()
