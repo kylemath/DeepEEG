@@ -1,0 +1,30 @@
+import sqlite3
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+
+connection = None
+cursor = None
+
+#connect sqlite and the python code
+def connect(path):
+    global connection, cursor
+    connection = sqlite3.connect(path)
+    cursor = connection.cursor()
+    cursor.execute(' PRAGMA foreign_keys=ON; ')
+    connection.commit()
+    return
+
+
+def graph1(count):
+    global connection, cursor
+    model = input("Enter a model type to graph: ")
+
+    cursor.execute("SELECT")
+    df = pd.DataFrame(cursor.fetchall())
+    plot = df.plot.bar(x = )
+    plot.set_xlabel("")
+    #changes the legend to count
+    plot.legend([''])
+    plt.plot()

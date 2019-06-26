@@ -50,16 +50,17 @@ def main():
     path = "testDB.db"
     connect(path)
     createTable()
-    index = table_length()
+
 
     dropout = 0.25
     batch_norm = True
     filt_size = 3
     pool_size = 2
-    models = ["NN","CNN","CNN3D","LSTM"]
+    models = ["NN"]  #,"CNN","CNN3D","LSTM"]
 
-    tests = input("How many tests do you want to run?: ")
-    for test in tests:
+    tests = int(input("How many tests do you want to run?: "))
+    for test in range(tests):
+        index = table_length()
         layers = random.randint(1,5)
         model_type = random.sample(models,1)
         model_type = model_type[0]
