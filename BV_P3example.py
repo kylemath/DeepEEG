@@ -2,7 +2,7 @@
 #source activate deepeeg
 #chomd +x install.sh
 #bash install.sh
-#!git clone https://github.com/kylemath/eeg-notebooks
+#!git clone https://github.com/kylemath/eeg-notebooks_v0.1
 #python
 from utils import *
 data_dir = '/Users/kylemathewson/Desktop/data/'

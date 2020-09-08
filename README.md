@@ -41,7 +41,7 @@ Prepare your environment the first time:
 git clone https://github.com/kylemath/DeepEEG/
 cd DeepEEG
 ./install.sh
-git clone https://github.com/kylemath/eeg-notebooks
+git clone https://github.com/kylemath/eeg-notebooks_v0.1
 
 ```
 
