@@ -141,7 +141,7 @@ def muse_load_data(data_dir, subject_nb=1, session_nb=1, sfreq=256.,
         session_nb = '*'
 
     data_path = os.path.join(
-            'eeg-notebooks/data', data_dir,
+            'eeg-notebooks_v0.1/data', data_dir,
             'subject{}/session{}/*.csv'.format(subject_nb, session_nb))
     fnames = glob(data_path)
 
