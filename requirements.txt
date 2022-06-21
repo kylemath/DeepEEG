@@ -11,7 +11,7 @@ kiwisolver==1.0.1
 Markdown==3.0.1
 matplotlib==3.0.2
 mne==0.17.0
-numpy==1.16.1
+numpy==1.22.0
 pandas==0.24.1
 protobuf==3.6.1
 pyparsing==2.3.1
